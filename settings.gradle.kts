@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "HyperRingCore"
 include(":app")
+include(":sdkCore")
