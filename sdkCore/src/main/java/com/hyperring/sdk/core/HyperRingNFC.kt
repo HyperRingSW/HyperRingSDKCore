@@ -1,10 +1,9 @@
 package com.hyperring.sdk.core
 
-class HyperRingMFA {
-
+class HyperRingNFC {
     companion object {
         fun hello() {
-            print("hello HyperRing MFA")
+            print("hello HyperRing NFC")
         }
     }
 }
