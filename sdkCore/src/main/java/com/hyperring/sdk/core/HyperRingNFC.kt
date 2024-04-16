@@ -2,8 +2,10 @@ package com.hyperring.sdk.core
 
 class HyperRingNFC {
     companion object {
-        fun hello() {
-            print("hello HyperRing NFC")
+        fun hello(): String {
+            val text = "hello HyperRing NFC"
+            print(text)
+            return text
         }
     }
 }
