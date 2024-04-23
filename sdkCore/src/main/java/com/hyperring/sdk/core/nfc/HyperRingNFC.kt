@@ -1,7 +1,9 @@
 package com.hyperring.sdk.core.nfc
 
+import android.app.Activity
 import android.content.Context
 import android.nfc.NfcAdapter
+import android.widget.Toast
 import java.util.Objects
 
 class HyperRingNFC {
@@ -14,12 +16,10 @@ class HyperRingNFC {
             return text
         }
 
-        /// todo
         fun initializeHyperRingNFC(context: Context) {
             adapter = NfcAdapter.getDefaultAdapter(context)
         }
 
-        /// todo
         fun getNFCStatus(): NFCStatus {
             // Logic to check NFC status
             if(adapter == null) {
@@ -33,9 +33,29 @@ class HyperRingNFC {
             return NFCStatus.NFC_UNSUPPORTED
         }
 
-        /// todo
-        fun startNFCTagPolling(onDiscovered: Function<Objects>) {
+        fun startNFCTagPolling(activity: Activity, onDiscovered: Function<Objects>) {
             // Start NFC scanning and call onDiscovered() when a tag is found
+
+            val adapter = adapter ?: run {
+                showToast(activity.baseContext, "NFC is not available for device.")
+                return
+            }
+            val flags = NfcAdapter.FLAG_READER_NFC_A or
+                    NfcAdapter.FLAG_READER_NFC_B or
+                    NfcAdapter.FLAG_READER_NFC_F or
+                    NfcAdapter.FLAG_READER_NFC_V or
+                    NfcAdapter.FLAG_READER_NFC_BARCODE or
+                    NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK or
+                    NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS
+
+            adapter.enableReaderMode(activity, {
+                showToast(activity.baseContext, it.toString())
+            }, flags, null)
+        }
+
+        private fun showToast(context: Context, text: String) {
+            Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+
         }
 
         /// todo
