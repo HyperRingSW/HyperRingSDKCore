@@ -1,6 +1,10 @@
 package com.hyperring.core
+import android.app.Activity
 import android.content.Context
+import android.nfc.Tag
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -13,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -23,9 +26,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -33,9 +36,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.viewModelScope
 import com.hyperring.core.ui.theme.HyperRingCoreTheme
-import com.hyperring.sdk.core.HyperRingMFA
 import com.hyperring.sdk.core.nfc.HyperRingNFC
 import com.hyperring.sdk.core.nfc.NFCStatus
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -65,7 +66,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Column {
-                        NFCBox(viewModel = mainViewModel)
+                        NFCBox(context = LocalContext.current, viewModel = mainViewModel)
                         MFABox()
                     }
                 }
@@ -123,7 +124,7 @@ fun MFABox(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun NFCBox(modifier: Modifier = Modifier, viewModel: MainViewModel) {
+fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewModel) {
     Column(modifier = modifier.padding(10.dp)) {
         Box(modifier = modifier
             .background(Color.LightGray)
@@ -148,7 +149,7 @@ fun NFCBox(modifier: Modifier = Modifier, viewModel: MainViewModel) {
                 FilledTonalButton(
                     modifier = modifier.fillMaxWidth(),
                     onClick = {
-//                    onClick()
+                        checkAvailable(context, viewModel)
                     }) {
                     Text("isAvailable(): ${viewModel.uiState.collectAsState().value.nfcStatus.name}", textAlign = TextAlign.Center)
                 }
@@ -159,20 +160,28 @@ fun NFCBox(modifier: Modifier = Modifier, viewModel: MainViewModel) {
                         .fillMaxWidth())
                 Row() {
                     Box(
-                        modifier = Modifier.weight(1f).wrapContentWidth(Alignment.Start)) {
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentWidth(Alignment.Start)) {
                         FilledTonalButton(
                             modifier = modifier.fillMaxWidth(),
                             onClick = {
-//                    onClick()
+                                startPolling(context, viewModel)
+//                                HyperRingNFC.startNFCTagPolling(
+//                                    context as Activity,
+//                                    onDiscovered = :: onDiscovered
+//                                )
                             }) {
-                            Text("[readHyperRing]\n" + "isPolling: false", textAlign = TextAlign.Center)
+                            Text("[readHyperRing]\n" + "isPolling: ${viewModel.uiState.collectAsState().value.isPolling}", textAlign = TextAlign.Center)
                         }
                     }
                     Box(modifier = modifier
                         .background(Color.LightGray)
                         .width(10.dp))
                     Box(
-                        modifier = Modifier.weight(1f).wrapContentWidth(Alignment.Start)) {
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentWidth(Alignment.Start)) {
                         FilledTonalButton(
                             modifier = modifier.fillMaxWidth(),
                             onClick = {
@@ -192,8 +201,23 @@ fun NFCBox(modifier: Modifier = Modifier, viewModel: MainViewModel) {
     }
 }
 
+fun startPolling(context: Context, viewModel: MainViewModel) {
+    viewModel.startPolling(context)
+}
+
+fun checkAvailable(context: Context, viewModel: MainViewModel) {
+    viewModel.initNFCStatus(context)
+}
+
+fun onDiscovered(context: Context, tag: Tag) : Tag {
+    Log.d("MainActivity", "onDiscovered: ${tag.id}")
+    Toast.makeText(context, "onDiscovered: ${tag.id}", Toast.LENGTH_SHORT).show()
+    return tag
+}
+
 data class MainUiState(
     val nfcStatus: NFCStatus = NFCStatus.NFC_UNSUPPORTED,
+    val isPolling: Boolean = false
 )
 
 class MainViewModel : ViewModel() {
@@ -210,7 +234,24 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun nfcStatus(): String {
-        return "NONE"
+    fun startPolling(context: Context) {
+        HyperRingNFC.startNFCTagPolling(
+            context as Activity, onDiscovered = :: onDiscovered).let {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    isPolling = HyperRingNFC.isPolling
+                )
+            }
+        }
+    }
+
+    fun stopPolling(context: Context) {
+        HyperRingNFC.stopNFCTagPolling(context as Activity).let {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    isPolling = HyperRingNFC.isPolling
+                )
+            }
+        }
     }
 }
