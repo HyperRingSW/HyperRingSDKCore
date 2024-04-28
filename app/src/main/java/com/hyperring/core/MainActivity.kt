@@ -59,7 +59,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-
         setContent {
             HyperRingCoreTheme {
                 // A surface container using the 'background' color from the theme
@@ -216,10 +215,6 @@ fun togglePolling(context: Context, viewModel: MainViewModel, isPolling: Boolean
     }
 }
 
-fun writing(context: Context, viewModel: MainViewModel) {
-    viewModel.writing(context, viewModel)
-}
-
 fun startPolling(context: Context, viewModel: MainViewModel) {
     viewModel.startPolling(context)
 }
@@ -233,7 +228,7 @@ fun checkAvailable(context: Context, viewModel: MainViewModel) {
 }
 
 private fun showToast(context: Context, text: String) {
-    Log.d("showToast", "text: $text")
+    Log.d("MainActivity", "text: $text")
     val handler = Handler(Looper.getMainLooper())
     handler.postDelayed(Runnable {
         Toast.makeText(context, text, Toast.LENGTH_SHORT).show() }, 0)
@@ -266,7 +261,6 @@ class MainViewModel : ViewModel() {
         } else {
             HyperRingNFC.read(tag, null)
         }
-
         return tag
     }
 
@@ -289,9 +283,6 @@ class MainViewModel : ViewModel() {
                 )
             }
         }
-    }
-
-    fun writing(context: Context, viewModel: MainViewModel) {
     }
 
     fun toggleNFCMode() {
