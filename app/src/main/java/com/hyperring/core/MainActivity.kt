@@ -3,6 +3,8 @@ import android.app.Activity
 import android.content.Context
 import android.nfc.Tag
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -166,7 +168,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                         FilledTonalButton(
                             modifier = modifier.fillMaxWidth(),
                             onClick = {
-                                startPolling(context, viewModel)
+                                togglePolling(context, viewModel, viewModel.uiState.value.isPolling)
 //                                HyperRingNFC.startNFCTagPolling(
 //                                    context as Activity,
 //                                    onDiscovered = :: onDiscovered
@@ -185,9 +187,10 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                         FilledTonalButton(
                             modifier = modifier.fillMaxWidth(),
                             onClick = {
-//                    onClick()
-                            }) {
-                            Text("[writeHyperRing]\n" + "isPolling: false", textAlign = TextAlign.Center)
+                                toggleNFCMode(viewModel)
+                            }
+                        ) {
+                            Text("[HyperRing] ${if(viewModel.uiState.collectAsState().value.isWriteMode)"Writing Mode" else "Reading Mode"}", textAlign = TextAlign.Center)
                         }
                     }
                 }
@@ -201,23 +204,45 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
     }
 }
 
+fun toggleNFCMode(viewModel: MainViewModel) {
+    viewModel.toggleNFCMode()
+}
+
+fun togglePolling(context: Context, viewModel: MainViewModel, isPolling: Boolean) {
+    if(isPolling) {
+        stopPolling(context, viewModel)
+    } else {
+        startPolling(context, viewModel)
+    }
+}
+
+fun writing(context: Context, viewModel: MainViewModel) {
+    viewModel.writing(context, viewModel)
+}
+
 fun startPolling(context: Context, viewModel: MainViewModel) {
     viewModel.startPolling(context)
+}
+
+fun stopPolling(context: Context, viewModel: MainViewModel) {
+    viewModel.stopPolling(context)
 }
 
 fun checkAvailable(context: Context, viewModel: MainViewModel) {
     viewModel.initNFCStatus(context)
 }
 
-fun onDiscovered(context: Context, tag: Tag) : Tag {
-    Log.d("MainActivity", "onDiscovered: ${tag.id}")
-    Toast.makeText(context, "onDiscovered: ${tag.id}", Toast.LENGTH_SHORT).show()
-    return tag
+private fun showToast(context: Context, text: String) {
+    Log.d("showToast", "text: $text")
+    val handler = Handler(Looper.getMainLooper())
+    handler.postDelayed(Runnable {
+        Toast.makeText(context, text, Toast.LENGTH_SHORT).show() }, 0)
 }
 
 data class MainUiState(
     val nfcStatus: NFCStatus = NFCStatus.NFC_UNSUPPORTED,
-    val isPolling: Boolean = false
+    val isPolling: Boolean = false,
+    var isWriteMode : Boolean = false
 )
 
 class MainViewModel : ViewModel() {
@@ -232,6 +257,17 @@ class MainViewModel : ViewModel() {
                 )
             }
         }
+    }
+
+    fun onDiscovered(activity: Activity, tag: Tag) : Tag {
+        showToast(activity, HyperRingNFC.convertBAToTagUUID(tag.id))
+        if(_uiState.value.isWriteMode) {
+            HyperRingNFC.write(tag, null, "test data")
+        } else {
+            HyperRingNFC.read(tag, null)
+        }
+
+        return tag
     }
 
     fun startPolling(context: Context) {
@@ -252,6 +288,17 @@ class MainViewModel : ViewModel() {
                     isPolling = HyperRingNFC.isPolling
                 )
             }
+        }
+    }
+
+    fun writing(context: Context, viewModel: MainViewModel) {
+    }
+
+    fun toggleNFCMode() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                isWriteMode = !_uiState.value.isWriteMode
+            )
         }
     }
 }
