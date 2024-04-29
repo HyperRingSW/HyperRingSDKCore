@@ -39,6 +39,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.hyperring.core.ui.theme.HyperRingCoreTheme
+import com.hyperring.sdk.core.nfc.HyperRingData
 import com.hyperring.sdk.core.nfc.HyperRingNFC
 import com.hyperring.sdk.core.nfc.NFCStatus
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -254,14 +255,16 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun onDiscovered(activity: Activity, tag: Tag) : Tag {
-        showToast(activity, HyperRingNFC.convertBAToTagUUID(tag.id))
+    fun onDiscovered(activity: Activity, hyperRingData: HyperRingData) : HyperRingData {
         if(_uiState.value.isWriteMode) {
-            HyperRingNFC.write(tag, null, "test data")
+//            HyperRingNFC.write(5, hyperRingData)
+            HyperRingNFC.write(null, hyperRingData)
+            showToast(activity, "[write]${hyperRingData.hyperRingTagId}")
         } else {
-            HyperRingNFC.read(tag, null)
+            HyperRingNFC.read(hyperRingData)
+            showToast(activity, "[read]${hyperRingData.hyperRingTagId}")
         }
-        return tag
+        return hyperRingData
     }
 
     fun startPolling(context: Context) {
