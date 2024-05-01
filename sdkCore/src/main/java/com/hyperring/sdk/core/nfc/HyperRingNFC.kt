@@ -3,7 +3,6 @@ import android.app.Activity
 import android.content.Context
 import android.nfc.NfcAdapter
 import android.util.Log
-import java.nio.charset.StandardCharsets
 
 class HyperRingNFC {
     companion object {
@@ -114,22 +113,13 @@ class HyperRingNFC {
 
         /***
          * @param hyperRingData HyperRingData
-         * todo @throws
          */
         fun read(hyperRingData: HyperRingData): HyperRingData? {
             if(hyperRingData.isHyperRingTag()) {
                 val ndef = hyperRingData.getNDEF()
                 if (ndef != null) {
                     ndef.connect()
-                    if(ndef.ndefMessage.records != null) {
-                        ndef.ndefMessage.records?.forEach {
-                            val payload = String(it.payload, StandardCharsets.UTF_8)
-                            log("records1: ${it.toMimeType()} | ${payload}")
-                            log("records2: ${it.tnf} | ${it.type} | ${it.describeContents()}")
-                        }
-                    } else {
-                        log("no records")
-                    }
+                    return HyperRingData.getDataFromNDEFMessage(ndef.ndefMessage)
                 } else {
                     log("ndef is null")
                 }
@@ -140,7 +130,7 @@ class HyperRingNFC {
         /**
          * HyperRingNFC Logger
          */
-        private fun log(text: String) {
+        fun log(text: String) {
             Log.d("HyperRingNFC", "log: $text")
         }
     }
