@@ -23,11 +23,10 @@ open class HyperRingData(tag: Tag?) {
             field = value
         }
 
-    constructor(id: Long?, data: String?) : this(null) {
+    constructor(id: Long, data: String) : this(null) {
         this.id = id
         this.data = data
     }
-
     init {
         initData(tag)
     }
@@ -130,6 +129,22 @@ open class HyperRingData(tag: Tag?) {
             return "{\"id\":null, \"data\": null}"
 //            Log.d("HyperRingData", "emptyJsonString: ${gson.toJson(this, BaseHyperRingData::class.java)}")
 //            return gson.toJson(this, BaseHyperRingData::class.java)
+        }
+
+        fun jsonStringData(map: Map<String, Any>): String {
+            return gson.toJson(map)
+        }
+
+        fun createData(id: Long, dataMap: MutableMap<String, Any>): HyperRingData {
+            var data = mutableMapOf<String, Any>("id" to id)
+            var jsonData = ""
+            try{
+                data["data"] = jsonStringData(dataMap)
+                jsonData = jsonStringData(data)
+            } catch (e: Exception) {
+                Log.e("HyperRingData", e.toString())
+            }
+            return HyperRingData(id, jsonData)
         }
     }
 }

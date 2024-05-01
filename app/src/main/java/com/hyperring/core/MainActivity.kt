@@ -267,7 +267,8 @@ class MainViewModel : ViewModel() {
     fun onDiscovered(hyperRingTag: HyperRingTag) : HyperRingTag {
         if(_uiState.value.isWriteMode) {
             /// Writing Data to Any HyperRing NFC TAG
-            val isWrite = HyperRingNFC.write(null, hyperRingTag, HyperRingData(90, "Demo Data"))
+            val isWrite = HyperRingNFC.write(null, hyperRingTag,
+                HyperRingData.createData(90, mutableMapOf("age" to 20, "name" to "홍길동")))
             if(isWrite && MainActivity.mainActivity != null)
                 showToast(MainActivity.mainActivity!!, "[write]${hyperRingTag.id}")
         } else {
