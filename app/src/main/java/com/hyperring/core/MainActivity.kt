@@ -1,7 +1,6 @@
 package com.hyperring.core
 import android.app.Activity
 import android.content.Context
-import android.nfc.Tag
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -39,6 +38,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.hyperring.core.ui.theme.HyperRingCoreTheme
+import com.hyperring.sdk.core.nfc.HyperRingData
 import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.HyperRingNFC
 import com.hyperring.sdk.core.nfc.NFCStatus
@@ -267,7 +267,7 @@ class MainViewModel : ViewModel() {
     fun onDiscovered(hyperRingTag: HyperRingTag) : HyperRingTag {
         if(_uiState.value.isWriteMode) {
             /// Writing Data to Any HyperRing NFC TAG
-            val isWrite = HyperRingNFC.write(null, hyperRingTag)
+            val isWrite = HyperRingNFC.write(null, hyperRingTag, HyperRingData(90, "Demo Data"))
             if(isWrite && MainActivity.mainActivity != null)
                 showToast(MainActivity.mainActivity!!, "[write]${hyperRingTag.id}")
         } else {

@@ -19,8 +19,8 @@ import android.util.Log
  * @param hyperRingTagId hyperRing`s Tag ID - if null, not initialized NFC Card
  */
 //class HyperRingData(var hyperRingTagId: Long?, var tag: Tag) {
-class HyperRingTag(private var tag: Tag) {
-    var data: BaseHyperRingData = BaseHyperRingData(tag)
+open class HyperRingTag(private var tag: Tag) {
+    var data: HyperRingData = HyperRingData(tag)
     val id: Long?
         get() {
             return data.id
@@ -44,37 +44,6 @@ class HyperRingTag(private var tag: Tag) {
         fun getNDEF(): Ndef? {
             return Companion.getNDEF(tag)
         }
-
-    fun ndefMessage(): NdefMessage {
-        return NdefMessage(
-            NdefRecord(
-                NdefRecord.TNF_UNKNOWN,
-                null,
-                null,
-                encryptData()))
-    }
-
-    private fun encryptData(): ByteArray {
-        return encrypt(data)
-    }
-
-    /**
-     * Must be used by overriding
-     * @param data Any type
-     */
-    fun encrypt(data: Any) : ByteArray {
-        // todo
-//        throw OverrideException()
-        return BaseHyperRingData.emptyJsonString().toByteArray()
-    }
-
-    /**
-     * Must be used by overriding
-     * @param data Any type
-     */
-    fun decrypt(data: Any) :Any {
-        throw OverrideException()
-    }
 
     companion object {
         fun getNDEF(tag: Tag): Ndef? {
