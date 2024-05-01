@@ -5,7 +5,6 @@ import android.nfc.Tag
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.PersistableBundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -40,7 +39,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.hyperring.core.ui.theme.HyperRingCoreTheme
-import com.hyperring.sdk.core.nfc.HyperRingData
+import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.HyperRingNFC
 import com.hyperring.sdk.core.nfc.NFCStatus
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -265,19 +264,20 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun onDiscovered(hyperRingData: HyperRingData) : HyperRingData {
+    fun onDiscovered(hyperRingTag: HyperRingTag) : HyperRingTag {
         if(_uiState.value.isWriteMode) {
-//            HyperRingNFC.write(5, hyperRingData)
-            HyperRingNFC.write(null, hyperRingData)
-            if(MainActivity.mainActivity != null)
-                showToast(MainActivity.mainActivity!!, "[write]${hyperRingData.hyperRingTagId}")
+            /// Writing Data to Any HyperRing NFC TAG
+            val isWrite = HyperRingNFC.write(null, hyperRingTag)
+            if(isWrite && MainActivity.mainActivity != null)
+                showToast(MainActivity.mainActivity!!, "[write]${hyperRingTag.id}")
         } else {
-            HyperRingNFC.read(hyperRingData)
-            if(MainActivity.mainActivity != null)
-                showToast(MainActivity.mainActivity!!, "[read]${hyperRingData.hyperRingTagId}")
-
+            if(hyperRingTag.isHyperRingTag()) {
+                /// Result of Every HyperRing NFC Data
+                if(MainActivity.mainActivity != null)
+                    showToast(MainActivity.mainActivity!!, "[read]${hyperRingTag.id}")
+            }
         }
-        return hyperRingData
+        return hyperRingTag
     }
 
     fun startPolling(context: Context) {

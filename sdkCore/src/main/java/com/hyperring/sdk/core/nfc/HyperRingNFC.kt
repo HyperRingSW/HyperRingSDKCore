@@ -2,6 +2,7 @@ package com.hyperring.sdk.core.nfc
 import android.app.Activity
 import android.content.Context
 import android.nfc.NfcAdapter
+import android.nfc.Tag
 import android.util.Log
 
 class HyperRingNFC {
@@ -58,14 +59,13 @@ class HyperRingNFC {
          * @param activity NFC adapter need Android Activity
          * @param onDiscovered When NFC tagged. return tag data
          */
-        fun startNFCTagPolling(activity: Activity, onDiscovered: (HyperRingData) -> HyperRingData) {
+        fun startNFCTagPolling(activity: Activity, onDiscovered: (HyperRingTag) -> HyperRingTag) {
             if(getNFCStatus() == NFCStatus.NFC_ENABLED) {
                 log( "Start NFC Polling.")
                 adapter?.enableReaderMode(activity, {
-                    // callback part
-                    onDiscovered(HyperRingData(it))
-                    log(it.id.toString())
-                }, HyperRingData.flags, null)
+                    val scannedHyperRingTag = HyperRingTag(it)
+                    onDiscovered(scannedHyperRingTag)
+                }, HyperRingTag.flags, null)
             }
         }
 
@@ -86,23 +86,29 @@ class HyperRingNFC {
          * else hyperRingTagId has ID, write data to HyperRing with only the same HyperRing ID
          *
          * @param hyperRingTagId HyperRing tag ID
-         * @param hyperRingData HyperRing data.
+         * @param hyperRingTag HyperRing data.
          */
-        fun write(hyperRingTagId: Long?, hyperRingData: HyperRingData): Boolean {
+        fun write(hyperRingTagId: Long?, hyperRingTag: HyperRingTag): Boolean {
             if(hyperRingTagId == null) {
                 // Write data to Any HyperRing NFC Device
-            } else if(hyperRingData.hyperRingTagId != hyperRingTagId) {
+            } else if(hyperRingTag.id != hyperRingTagId) {
                 // Not matched HyperRingTagId (Other HyperRingTag Tagged)
                 log("[Write] tag id is not matched.")
                 return false
             }
 
-            if(hyperRingData.isHyperRingTag()) {
-                val ndef = hyperRingData.getNDEF()
+            if(hyperRingTag.isHyperRingTag()) {
+                val ndef = hyperRingTag.getNDEF()
                 if (ndef != null) {
-                    ndef.connect()
-                    ndef.writeNdefMessage(hyperRingData.jsonDataMessage())
-                    log("[Write] success.")
+                    try {
+                        ndef.connect()
+                        ndef.writeNdefMessage(hyperRingTag.ndefMessage())
+                        log("[Write] success.")
+                    } catch (e: Exception) {
+                        log("[Write] exception: ${e.toString()}")
+                    } finally {
+                        ndef.close()
+                    }
                     return true
                 } else {
                     log("ndef is null")
@@ -112,17 +118,16 @@ class HyperRingNFC {
         }
 
         /***
-         * @param hyperRingData HyperRingData
+         * If HyperRingTagId is same HyperRingData`s inner hyperRingTagId return Data
+         *
+         * @param hyperRingTagId
+         * @param hyperRingTag
          */
-        fun read(hyperRingData: HyperRingData): HyperRingData? {
-            if(hyperRingData.isHyperRingTag()) {
-                val ndef = hyperRingData.getNDEF()
-                if (ndef != null) {
-                    ndef.connect()
-                    return HyperRingData.getDataFromNDEFMessage(ndef.ndefMessage)
-                } else {
-                    log("ndef is null")
-                }
+        fun read(hyperRingTagId: Long?, hyperRingTag: HyperRingTag): HyperRingTag? {
+            if(hyperRingTagId == null) {
+                return hyperRingTag
+            } else if(hyperRingTag.id == hyperRingTagId) {
+                return hyperRingTag
             }
             return null
         }
