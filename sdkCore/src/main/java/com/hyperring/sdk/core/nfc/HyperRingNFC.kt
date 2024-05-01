@@ -5,101 +5,100 @@ import android.nfc.NfcAdapter
 import android.util.Log
 import java.nio.charset.StandardCharsets
 
-
 class HyperRingNFC {
     companion object {
-        private var isinitialized = false
+        private var initialized = false
         private var adapter: NfcAdapter? = null
-        var isPolling: Boolean = false
+        var isPolling: Boolean = false // Polling status
 
-        // Current NFC spec / NFC-A (ISO 14443-3A)
-        // If Type of HyperRing NFC is added. Fix this flags
-        private const val flags = NfcAdapter.FLAG_READER_NFC_A
-/*        private const val flags = NfcAdapter.FLAG_READER_NFC_A or
-                NfcAdapter.FLAG_READER_NFC_B or
-                NfcAdapter.FLAG_READER_NFC_F or
-                NfcAdapter.FLAG_READER_NFC_V or
-                NfcAdapter.FLAG_READER_NFC_BARCODE
-                    NfcAdapter.FLAG_READER_NFC_BARCODE or
-                    NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK
-                    NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK or
-                    NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS*/
-
-        /// todo header Annotation
+        /**
+         * Initialized HyperRingNFC
+         */
         fun initializeHyperRingNFC(context: Context) {
-            isinitialized = true
+            initialized = true
             adapter = NfcAdapter.getDefaultAdapter(context)
         }
 
-        /// todo header Annotation
+        /**
+         * Get current NFC status
+         *
+         * @return NFCStatus
+         * @exception NeedInitializeException If not initialized HyperRingNFC
+         */
         fun getNFCStatus(): NFCStatus {
-            // If not initialized,
-            if(!isinitialized) {
+            var status = NFCStatus.NFC_UNSUPPORTED
+
+            // If not initialized, throw exception
+            if(!initialized) {
+                isPolling = false
                 throw NeedInitializeException()
             }
 
-            // Logic to check NFC status
-            if(adapter == null) {
-                return NFCStatus.NFC_UNSUPPORTED
-            } else if(adapter!!.isEnabled) {
-                return NFCStatus.NFC_ENABLED
-            } else if(!adapter!!.isEnabled) {
-                return NFCStatus.NFC_DISABLED
+            when {
+                adapter == null -> {
+                    log( "NFC is not available.")
+                    status = NFCStatus.NFC_UNSUPPORTED
+                }
+                adapter!!.isEnabled -> {
+                    log( "Start NFC Polling.")
+                    status = NFCStatus.NFC_ENABLED
+                }
+                !adapter!!.isEnabled -> {
+                    log( "NFC is not polling.")
+                    status = NFCStatus.NFC_DISABLED
+                }
             }
-            return NFCStatus.NFC_UNSUPPORTED
+
+            (status == NFCStatus.NFC_ENABLED).also { isPolling = it }
+            return status
         }
 
-        /// todo header Annotation
-        /// Start NFC scanning and call onDiscovered() when a tag is found
-        fun startNFCTagPolling(activity: Activity, onDiscovered: (Activity, HyperRingData) -> HyperRingData) {
-            if(adapter == null) {
-                log( "NFC is not available.")
-                isPolling = false
-                return
-            } else if(!adapter!!.isEnabled) {
-                log( "NFC is not polling.")
-                isPolling = false
-                return
-            } else {
+        /**
+         * Start NFCTag Polling
+         *
+         * @param activity NFC adapter need Android Activity
+         * @param onDiscovered When NFC tagged. return tag data
+         */
+        fun startNFCTagPolling(activity: Activity, onDiscovered: (HyperRingData) -> HyperRingData) {
+            if(getNFCStatus() == NFCStatus.NFC_ENABLED) {
                 log( "Start NFC Polling.")
-                isPolling = true
+                adapter?.enableReaderMode(activity, {
+                    // callback part
+                    onDiscovered(HyperRingData(it))
+                    log(it.id.toString())
+                }, HyperRingData.flags, null)
             }
-
-            adapter?.enableReaderMode(activity, {
-                // callback part
-                onDiscovered(activity, HyperRingData(it))
-                log(it.id.toString())
-            }, flags, null)
         }
 
-        /// todo header Annotation
+        /**
+         * Stop NFC Tag Polling
+         *
+         * @param activity
+         */
         fun stopNFCTagPolling(activity: Activity) {
             isPolling = false
             adapter?.disableReaderMode(activity)
             log( "Stop NFC Polling.")
         }
 
-        private fun log(text: String) {
-            Log.d("HyperRingNFC", "text: $text")
-        }
-
         /**
-         * Encrypts and stores data on a HyperRing NFC tag.
+         * Write data to HyperRingTag
+         * If hyperRingTagId is null, write data to Regardless of HyperRing iD
+         * else hyperRingTagId has ID, write data to HyperRing with only the same HyperRing ID
          *
          * @param hyperRingTagId HyperRing tag ID
-         * @param encryptionKey Encryption key
-         * @param data Data to be stored
+         * @param hyperRingData HyperRing data.
          */
         fun write(hyperRingTagId: Long?, hyperRingData: HyperRingData): Boolean {
             if(hyperRingTagId == null) {
-                // Write data to Any HyperRing NFC
+                // Write data to Any HyperRing NFC Device
             } else if(hyperRingData.hyperRingTagId != hyperRingTagId) {
-                // hyperRingTagId != data.hyperRingTagId (Different)
+                // Not matched HyperRingTagId (Other HyperRingTag Tagged)
                 log("[Write] tag id is not matched.")
                 return false
             }
 
-            if(hyperRingData.isHyperRingTag() && hyperRingData.isNDEF()) {
+            if(hyperRingData.isHyperRingTag()) {
                 val ndef = hyperRingData.getNDEF()
                 if (ndef != null) {
                     ndef.connect()
@@ -113,9 +112,12 @@ class HyperRingNFC {
             return false
         }
 
-        /// todo
+        /***
+         * @param hyperRingData HyperRingData
+         * todo @throws
+         */
         fun read(hyperRingData: HyperRingData): HyperRingData? {
-            if(hyperRingData.isNDEF()) {
+            if(hyperRingData.isHyperRingTag()) {
                 val ndef = hyperRingData.getNDEF()
                 if (ndef != null) {
                     ndef.connect()
@@ -133,6 +135,13 @@ class HyperRingNFC {
                 }
             }
             return null
+        }
+
+        /**
+         * HyperRingNFC Logger
+         */
+        private fun log(text: String) {
+            Log.d("HyperRingNFC", "log: $text")
         }
     }
 

@@ -5,6 +5,7 @@ import android.nfc.Tag
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PersistableBundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -51,12 +52,21 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private lateinit var mainViewModel : MainViewModel
 
+    companion object {
+        var mainActivity: ComponentActivity? = null
+    }
+
+    override fun onResume() {
+        mainActivity = this
+        super.onResume()
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mainActivity = this
         mainViewModel = ViewModelProvider(this)[MainViewModel::class.java]
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainViewModel.initNFCStatus(applicationContext)
+                mainViewModel.initNFCStatus(this@MainActivity)
             }
         }
 
@@ -255,14 +265,17 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun onDiscovered(activity: Activity, hyperRingData: HyperRingData) : HyperRingData {
+    fun onDiscovered(hyperRingData: HyperRingData) : HyperRingData {
         if(_uiState.value.isWriteMode) {
 //            HyperRingNFC.write(5, hyperRingData)
             HyperRingNFC.write(null, hyperRingData)
-            showToast(activity, "[write]${hyperRingData.hyperRingTagId}")
+            if(MainActivity.mainActivity != null)
+                showToast(MainActivity.mainActivity!!, "[write]${hyperRingData.hyperRingTagId}")
         } else {
             HyperRingNFC.read(hyperRingData)
-            showToast(activity, "[read]${hyperRingData.hyperRingTagId}")
+            if(MainActivity.mainActivity != null)
+                showToast(MainActivity.mainActivity!!, "[read]${hyperRingData.hyperRingTagId}")
+
         }
         return hyperRingData
     }

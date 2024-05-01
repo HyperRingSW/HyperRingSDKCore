@@ -1,6 +1,7 @@
 package com.hyperring.sdk.core.nfc
 import android.nfc.NdefMessage
 import android.nfc.NdefRecord
+import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.Ndef
 import android.nfc.tech.NdefFormatable
@@ -22,7 +23,6 @@ import com.google.gson.Gson
  */
 class HyperRingData(var tag: Tag) {
     var hyperRingTagId: Long? = getLongTagId(tag.id)
-
     /**
      * If tag data contains HyperRingData, return JsonString
      * not contains, return emptyJsonString
@@ -42,12 +42,25 @@ class HyperRingData(var tag: Tag) {
 
     //    ISO14443A, NFC Forum Type2, NTAG216
     private fun isHyperRingTag(tag: Tag): Boolean {
-        return tag.techList.contains("android.nfc.tech.NfcA") && tag.techList.contains("android.nfc.tech.Ndef")
+        return isNFCA() && isNDEF()
     }
 
     companion object {
         const val mime: String = "text/hyperring"
         val gson: Gson = Gson()
+
+        // Current NFC spec / NFC-A (ISO 14443-3A)
+        // If Type of HyperRing NFC is added. Update this flags
+        const val flags = NfcAdapter.FLAG_READER_NFC_A
+        /*        private const val flags = NfcAdapter.FLAG_READER_NFC_A or
+                        NfcAdapter.FLAG_READER_NFC_B or
+                        NfcAdapter.FLAG_READER_NFC_F or
+                        NfcAdapter.FLAG_READER_NFC_V or
+                        NfcAdapter.FLAG_READER_NFC_BARCODE
+                            NfcAdapter.FLAG_READER_NFC_BARCODE or
+                            NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK
+                            NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK or
+                            NfcAdapter.FLAG_READER_NO_PLATFORM_SOUNDS*/
 
         /**
          * Convert Tag`s ByteArray ID to String UUID
@@ -105,10 +118,12 @@ class HyperRingData(var tag: Tag) {
         return NdefRecord.createTextRecord("en", emptyJsonString())
     }
 
+    fun isNFCA(): Boolean {
+        return tag.techList.contains("android.nfc.tech.NfcA")
+    }
+
     fun isNDEF(): Boolean {
-        if(!tag.techList.contains("android.nfc.tech.Ndef")) {
-            return false
-        }
+        return tag.techList.contains("android.nfc.tech.Ndef")
 //        try {
 //            Log.d("HyperRingData", "isNDEF tag id: ${tag.id}")
 //            val formatableTag : NdefFormatable = NdefFormatable.get(tag)
@@ -118,8 +133,6 @@ class HyperRingData(var tag: Tag) {
 //        }catch (e: Exception) {
 //            Log.e("HyperRingData", "isNDEF: "+e.toString())
 //        }
-
-        return true
     }
 
     fun getNDEF(): Ndef? {
