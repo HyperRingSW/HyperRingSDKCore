@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.CalendarContract.Colors
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -141,7 +143,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
             .background(Color.LightGray)
             .padding(10.dp)
             .fillMaxWidth()
-            .height((170.dp))) {
+            .height((220.dp))) {
             Column(
                 modifier = modifier
                     .align(Alignment.TopCenter)
@@ -208,9 +210,94 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                         .background(Color.LightGray)
                         .height(10.dp)
                         .fillMaxWidth())
+                if(!viewModel.uiState.collectAsState().value.isWriteMode) Row() {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentWidth(Alignment.Start)) {
+                        FilledTonalButton(
+                            modifier = modifier.fillMaxWidth(),
+                            colors = if(viewModel.uiState.collectAsState().value.targetReadId == 10L)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                            else ButtonDefaults.outlinedButtonColors(),
+                            onClick = {
+                                setReadTargetId(viewModel, 10)
+                            }) {
+                            Text("[Read] Read to only ID-10 TAG", textAlign = TextAlign.Center)
+                        }
+                    }
+                    Box(modifier = modifier
+                        .background(Color.LightGray)
+                        .width(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentWidth(Alignment.Start)) {
+                        FilledTonalButton(
+                            modifier = modifier.fillMaxWidth(),
+                            colors = if(viewModel.uiState.collectAsState().value.targetReadId == null)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                            else ButtonDefaults.outlinedButtonColors(),
+                            onClick = {
+                                setReadTargetId(viewModel, null)
+                            }
+                        ) {
+                            Text("[Read] Read to Any HyperRing TAG", textAlign = TextAlign.Center)
+                        }
+                    }
+                }
+                if(viewModel.uiState.collectAsState().value.isWriteMode) Row() {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentWidth(Alignment.Start)) {
+                        FilledTonalButton(
+                            modifier = modifier.fillMaxWidth(),
+                            colors = if(viewModel.uiState.collectAsState().value.targetWriteId == 10L)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                            else ButtonDefaults.outlinedButtonColors(),
+                            onClick = {
+                                setWriteTargetId(viewModel, 10)
+                            }) {
+                            Text("[Write] Write to ID-10 TAG", textAlign = TextAlign.Center)
+                        }
+                    }
+                    Box(modifier = modifier
+                        .background(Color.LightGray)
+                        .width(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentWidth(Alignment.Start)) {
+                        FilledTonalButton(
+                            modifier = modifier.fillMaxWidth(),
+                            colors = if(viewModel.uiState.collectAsState().value.targetWriteId == null)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                            else ButtonDefaults.outlinedButtonColors(),
+                            onClick = {
+                                setWriteTargetId(viewModel, null)
+                            }
+                        ) {
+                            Text("[Write] Write to Any TAG", textAlign = TextAlign.Center)
+                        }
+                    }
+                }
+                Box(
+                    modifier = modifier
+                        .background(Color.LightGray)
+                        .height(10.dp)
+                        .fillMaxWidth())
             }
         }
     }
+}
+
+fun setReadTargetId(viewModel: MainViewModel, id: Long?) {
+    viewModel.setReadTargetId(id)
+}
+
+fun setWriteTargetId(viewModel: MainViewModel, id: Long?) {
+    viewModel.setWriteTargetId(id)
 }
 
 fun toggleNFCMode(viewModel: MainViewModel) {
@@ -247,7 +334,9 @@ private fun showToast(context: Context, text: String) {
 data class MainUiState(
     val nfcStatus: NFCStatus = NFCStatus.NFC_UNSUPPORTED,
     val isPolling: Boolean = false,
-    var isWriteMode : Boolean = false
+    var isWriteMode : Boolean = false,
+    var targetWriteId: Long? = null,
+    var targetReadId: Long? = null
 )
 
 class MainViewModel : ViewModel() {
@@ -264,18 +353,23 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun onDiscovered(hyperRingTag: HyperRingTag) : HyperRingTag {
+    private fun onDiscovered(hyperRingTag: HyperRingTag) : HyperRingTag {
         if(_uiState.value.isWriteMode) {
             /// Writing Data to Any HyperRing NFC TAG
-            val isWrite = HyperRingNFC.write(null, hyperRingTag,
-                HyperRingData.createData(90, mutableMapOf("age" to 20, "name" to "홍길동")))
+            val isWrite = HyperRingNFC.write(uiState.value.targetWriteId, hyperRingTag,
+                // Default HyperRingData
+//                HyperRingData.createData(10, mutableMapOf("age" to 20, "name" to "홍길동")))
+                // Demo custom Data
+                DemoData.createData(10, "John Doe"))
             if(isWrite && MainActivity.mainActivity != null)
                 showToast(MainActivity.mainActivity!!, "[write]${hyperRingTag.id}")
         } else {
             if(hyperRingTag.isHyperRingTag()) {
-                /// Result of Every HyperRing NFC Data
-                if(MainActivity.mainActivity != null)
-                    showToast(MainActivity.mainActivity!!, "[read]${hyperRingTag.id}")
+                val readTag: HyperRingTag? = HyperRingNFC.read(uiState.value.targetReadId, hyperRingTag)
+                if(readTag != null) {
+                    if(MainActivity.mainActivity != null)
+                        showToast(MainActivity.mainActivity!!, "[read]${hyperRingTag.id}")
+                }
             }
         }
         return hyperRingTag
@@ -306,6 +400,22 @@ class MainViewModel : ViewModel() {
         _uiState.update { currentState ->
             currentState.copy(
                 isWriteMode = !_uiState.value.isWriteMode
+            )
+        }
+    }
+
+    fun setReadTargetId(id: Long?) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                targetReadId = id
+            )
+        }
+    }
+
+    fun setWriteTargetId(id: Long?) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                targetWriteId = id
             )
         }
     }

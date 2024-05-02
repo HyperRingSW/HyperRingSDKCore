@@ -86,8 +86,9 @@ class HyperRingNFC {
          *
          * @param hyperRingTagId HyperRing tag ID
          * @param hyperRingTag HyperRing data.
+         * @param hyperRingData: HyperRingDataInterface
          */
-        fun write(hyperRingTagId: Long?, hyperRingTag: HyperRingTag, hyperRingData: HyperRingData): Boolean {
+        fun write(hyperRingTagId: Long?, hyperRingTag: HyperRingTag, hyperRingData: HyperRingDataInterface): Boolean {
             if(hyperRingTagId == null) {
                 // Write data to Any HyperRing NFC Device
             } else if(hyperRingTag.id != hyperRingTagId) {
@@ -101,8 +102,8 @@ class HyperRingNFC {
                 if (ndef != null) {
                     try {
                         ndef.connect()
-                        ndef.writeNdefMessage(hyperRingData.ndefMessage())
-                        logD("[Write] success. [${hyperRingData.ndefMessage().records.get(0).tnf}] [${hyperRingData.ndefMessage().records.get(0).payload}]")
+                        ndef.writeNdefMessage(hyperRingData.ndefMessageBody())
+                        logD("[Write] success. [${hyperRingData.ndefMessageBody().records.get(0).tnf}] [${hyperRingData.ndefMessageBody().records.get(0).payload}]")
                     } catch (e: Exception) {
                         logE("[Write] exception: ${e}")
                     } finally {
@@ -115,34 +116,6 @@ class HyperRingNFC {
             }
             return false
         }
-//        fun write(hyperRingTagId: Long?, hyperRingTag: HyperRingTag): Boolean {
-//            if(hyperRingTagId == null) {
-//                // Write data to Any HyperRing NFC Device
-//            } else if(hyperRingTag.id != hyperRingTagId) {
-//                // Not matched HyperRingTagId (Other HyperRingTag Tagged)
-//                logD("[Write] tag id is not matched.")
-//                return false
-//            }
-//
-//            if(hyperRingTag.isHyperRingTag()) {
-//                val ndef = hyperRingTag.getNDEF()
-//                if (ndef != null) {
-//                    try {
-//                        ndef.connect()
-//                        ndef.writeNdefMessage(hyperRingTag.ndefMessage())
-//                        logD("[Write] success. [${hyperRingTag.ndefMessage().records.get(0).tnf}] [${hyperRingTag.ndefMessage().records.get(0).payload}]")
-//                    } catch (e: Exception) {
-//                        logE("[Write] exception: ${e}")
-//                    } finally {
-//                        ndef.close()
-//                    }
-//                    return true
-//                } else {
-//                    logD("ndef is null")
-//                }
-//            }
-//            return false
-//        }
 
         /***
          * If HyperRingTagId is same HyperRingData`s inner hyperRingTagId return Data
