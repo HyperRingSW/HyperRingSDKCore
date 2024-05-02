@@ -100,6 +100,12 @@ class HyperRingNFC {
             if(hyperRingTag.isHyperRingTag()) {
                 val ndef = hyperRingTag.getNDEF()
                 if (ndef != null) {
+                    if(!ndef.isWritable) {
+                        throw ReadOnlyNFCException()
+                    }
+                    if(ndef.maxSize <= hyperRingData.ndefMessageBody().toByteArray().size) {
+                        throw OverMaxSizeMsgException(ndef.maxSize, hyperRingData.ndefMessageBody().toByteArray().size)
+                    }
                     try {
                         ndef.connect()
                         ndef.writeNdefMessage(hyperRingData.ndefMessageBody())
@@ -146,3 +152,7 @@ class HyperRingNFC {
 
     class NeedInitializeException: Exception("Need HyperRing NFC Initialize")
 }
+
+class ReadOnlyNFCException : Exception("Read only NFC.")
+class OverMaxSizeMsgException(maxSize: Int, msgSize:Int) : Exception("NFC maxSize is $maxSize, Message maxSize is $msgSize.")
+
