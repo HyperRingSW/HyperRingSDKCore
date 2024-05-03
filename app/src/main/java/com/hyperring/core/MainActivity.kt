@@ -50,6 +50,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * Demo Application
+ */
 class MainActivity : ComponentActivity() {
     private lateinit var mainViewModel : MainViewModel
 
@@ -66,6 +69,7 @@ class MainActivity : ComponentActivity() {
         mainActivity = this
         mainViewModel = ViewModelProvider(this)[MainViewModel::class.java]
         lifecycleScope.launch {
+            // If application is started, init nfc status
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mainViewModel.initNFCStatus(this@MainActivity)
             }
@@ -332,6 +336,7 @@ private fun showToast(context: Context, text: String) {
 }
 
 data class MainUiState(
+    // UI state flags
     val nfcStatus: NFCStatus = NFCStatus.NFC_UNSUPPORTED,
     val isPolling: Boolean = false,
     var isWriteMode : Boolean = false,
@@ -344,6 +349,7 @@ class MainViewModel : ViewModel() {
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
     fun initNFCStatus(context: Context) {
+        // init HyperRingNFC
         HyperRingNFC.initializeHyperRingNFC(context).let {
             _uiState.update { currentState ->
                 currentState.copy(

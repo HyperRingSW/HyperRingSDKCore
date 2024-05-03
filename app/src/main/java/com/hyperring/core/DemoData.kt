@@ -61,10 +61,12 @@ class DemoData(tag: Tag?) : HyperRingDataInterface {
     }
 
     override fun encrypt(data: Any?): ByteArray {
+        // todo update it
         return data.toString().toByteArray()
     }
 
     override fun decrypt(data: String?): Any {
+        // todo update it
         return data.toString()
     }
 

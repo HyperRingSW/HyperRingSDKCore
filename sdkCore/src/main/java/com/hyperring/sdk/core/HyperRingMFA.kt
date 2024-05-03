@@ -1,5 +1,8 @@
 package com.hyperring.sdk.core
 
+/**
+ * jwt base demo
+ */
 class HyperRingMFA {
 
     companion object {

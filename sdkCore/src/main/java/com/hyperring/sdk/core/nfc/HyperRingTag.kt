@@ -10,7 +10,7 @@ import android.util.Log
  *     NDEFRecord
  *     - Json
  *     {
- *         "tagId": HyperRingTadId
+ *         "id": HyperRingTadId
  *         "data": encrypted or original jsonStringData
  *     }
  * @param tag NFC Tag
