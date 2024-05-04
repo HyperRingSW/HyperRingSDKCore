@@ -1,6 +1,12 @@
 package com.hyperring.sdk.core.mfa
 
+import android.app.Activity
+import android.app.Dialog
 import android.content.Context
+import android.view.Window
+import android.widget.Button
+import android.widget.TextView
+import com.hyperring.sdk.core.R
 import com.hyperring.sdk.core.nfc.HyperRingDataInterface
 
 /**
@@ -76,9 +82,26 @@ class HyperRingMFA {
          * @param context
          * @param idList
          */
-        fun requestHyperRingMFAAuthentication(context: Context, idList: List<Long>): MFAChallengeResponse {
+        fun requestHyperRingMFAAuthentication(activity: Activity, idList: List<Long>): MFAChallengeResponse {
             //todo fix it(dummy)
+            showMFADialog(activity)
             return MFAChallengeResponse(null, null)
+        }
+
+        private fun showMFADialog(activity: Activity) {
+            val dialog = Dialog(activity)
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+            dialog.setCancelable(false)
+            dialog.setContentView(R.layout.custom_layout)
+
+            val body = dialog.findViewById(R.id.tvBody) as TextView
+            body.text = "BODY"
+
+            val yesBtn = dialog.findViewById(R.id.btnYes) as Button
+            yesBtn.setOnClickListener {
+                dialog.dismiss()
+            }
+            dialog.show()
         }
     }
 

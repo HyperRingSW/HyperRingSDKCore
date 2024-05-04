@@ -40,6 +40,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.hyperring.core.ui.theme.HyperRingCoreTheme
+import com.hyperring.sdk.core.mfa.HyperRingMFA
 import com.hyperring.sdk.core.nfc.HyperRingData
 import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.HyperRingNFC
@@ -131,7 +132,7 @@ fun MFABox(modifier: Modifier = Modifier) {
                 FilledTonalButton(
                     modifier = modifier.fillMaxWidth(),
                     onClick = {
-//                    onClick()
+                        requestMFADialog()
                     }) {
                     Text("Open requestAuthPage()", textAlign = TextAlign.Center)
                 }
@@ -293,6 +294,13 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                         .fillMaxWidth())
             }
         }
+    }
+}
+
+
+fun requestMFADialog() {
+    if(MainActivity.mainActivity != null) {
+        HyperRingMFA.requestHyperRingMFAAuthentication(MainActivity.mainActivity!!, mutableListOf())
     }
 }
 
