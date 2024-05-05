@@ -39,6 +39,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.hyperring.core.ui.theme.HyperRingCoreTheme
+import com.hyperring.sdk.core.data.HyperRingDataMFAInterface
 import com.hyperring.sdk.core.mfa.HyperRingMFA
 import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.HyperRingNFC
@@ -295,10 +296,13 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
     }
 }
 
-
 fun requestMFADialog() {
     if(MainActivity.mainActivity != null) {
-        HyperRingMFA.requestHyperRingMFAAuthentication(MainActivity.mainActivity!!)
+        var mfaDataList: MutableList<HyperRingDataMFAInterface> = mutableListOf()
+        HyperRingMFA.initializeHyperRingMFA(mfaDataList= mfaDataList.toList())
+        HyperRingMFA.requestHyperRingMFAAuthentication(MainActivity.mainActivity!!).let {
+            Log.d("MainActivity", "requestMFADialog result: ${it}")
+        }
     }
 }
 

@@ -10,6 +10,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import com.hyperring.sdk.core.R
 import com.hyperring.sdk.core.data.HyperRingDataInterface
+import com.hyperring.sdk.core.data.HyperRingDataMFAInterface
 import com.hyperring.sdk.core.data.HyperRingDataNFCInterface
 import com.hyperring.sdk.core.nfc.HyperRingNFC
 import com.hyperring.sdk.core.nfc.HyperRingTag
@@ -22,12 +23,12 @@ import kotlinx.coroutines.runBlocking
 class HyperRingMFA {
     companion object {
         //  MFA Data (key: HyperRingTagId, value: data)
-        private var mfaData: MutableMap<Long, HyperRingDataNFCInterface> = mutableMapOf()
+        private var mfaData: MutableMap<Long, HyperRingDataMFAInterface> = mutableMapOf()
 
         /**
          * Init MFA MFAData (When veryfyHyperRingMFA, Using this MFA Data)
          */
-        fun initializeHyperRingMFA(mfaDataList: List<HyperRingDataNFCInterface>): Boolean {
+        fun initializeHyperRingMFA(mfaDataList: List<HyperRingDataMFAInterface>): Boolean {
             try {
                 mfaDataList.forEach {
                     if(it.id != null) {
@@ -60,6 +61,17 @@ class HyperRingMFA {
         }
 
         /**
+         * Update MFA Data
+         */
+        fun updateMFAData(mfaDataList: List<HyperRingDataMFAInterface>) {
+            mfaDataList.forEach {
+                if(it.id != null) {
+                    mfaData[it.id!!] = it
+                }
+            }
+        }
+
+        /**
          * Compare HyperRingTag`s MFA Data and Saved MFA(from initializeHyperRingMFA function)
          */
         fun verifyHyperRingMFAAuthentication(response: MFAChallengeResponse): Boolean {
@@ -80,7 +92,8 @@ class HyperRingMFA {
         private fun isValidResponse(response: MFAChallengeResponse): Boolean {
             // Implement the actual response verification logic
             // Assume always returning true as a placeholder
-            return true
+            val result = processMFAChallenge(response)
+            return result.isSuccess?:false
         }
 
         /**
@@ -90,11 +103,14 @@ class HyperRingMFA {
          *
          * @param activity
          */
-//        fun requestHyperRingMFAAuthentication(activity: Activity, idList: List<Long>): MFAChallengeResponse {
-        fun requestHyperRingMFAAuthentication(activity: Activity) {
-            var result = showMFADialog(activity)
+        fun requestHyperRingMFAAuthentication(activity: Activity): Boolean {
+            val mfaChallengeResponse: MFAChallengeResponse? = showMFADialog(activity)
+            return mfaChallengeResponse != null && mfaChallengeResponse.isSuccess == true
         }
-        private fun showMFADialog(activity: Activity) {
+
+        private fun showMFADialog(activity: Activity): MFAChallengeResponse? {
+            var successData : MFAChallengeResponse? = null
+
             HyperRingNFC.initializeHyperRingNFC(activity)
             if(HyperRingNFC.getNFCStatus() == NFCStatus.NFC_UNSUPPORTED) {
                 throw HyperRingNFC.UnsupportedNFCException()
@@ -111,8 +127,9 @@ class HyperRingMFA {
                         Toast.makeText(activity, "Tagged", Toast.LENGTH_SHORT).show()
                         val mfaData = processMFAChallenge(tag.data)
 
-                        var image = dialog.findViewById(R.id.image) as ImageView
+                        var image: ImageView = dialog.findViewById(R.id.image)
                         if(mfaData.isSuccess == true) {
+                            successData = mfaData
                             image.setImageResource(R.drawable.img_success)
                             if(dialog.isShowing) {
                                 dialog.dismiss()
@@ -143,6 +160,8 @@ class HyperRingMFA {
                     HyperRingNFC.stopNFCTagPolling(activity)
                     Toast.makeText(activity, "Close MFA UI", Toast.LENGTH_SHORT).show()
                 }
+            }.let {
+                return successData
             }
         }
 
