@@ -1,4 +1,4 @@
-package com.hyperring.sdk.core.nfc
+package com.hyperring.sdk.core.data
 import android.nfc.NdefMessage
 import android.nfc.Tag
 import android.util.Log
@@ -18,11 +18,6 @@ interface HyperRingDataInterface {
     fun decrypt(data: String?) :Any {
         throw OverrideException()
     }
-
-    fun ndefMessageBody(): NdefMessage
-
-    fun fromJsonString(payload: String): IdData
-
     class OverrideException: Exception("Needs Overriding")
 }
 

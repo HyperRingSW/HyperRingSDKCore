@@ -3,6 +3,7 @@ import android.app.Activity
 import android.content.Context
 import android.nfc.NfcAdapter
 import android.util.Log
+import com.hyperring.sdk.core.data.HyperRingDataNFCInterface
 
 class HyperRingNFC {
     companion object {
@@ -58,7 +59,7 @@ class HyperRingNFC {
          * @param activity NFC adapter need Android Activity
          * @param onDiscovered When NFC tagged. return tag data
          */
-        fun startNFCTagPolling(activity: Activity, onDiscovered: (HyperRingTag) -> (HyperRingTag) ) {
+        fun startNFCTagPolling(activity: Activity, onDiscovered: (HyperRingTag) -> HyperRingTag ) {
             if(getNFCStatus() == NFCStatus.NFC_ENABLED) {
                 logD( "Start NFC Polling.")
                 adapter?.enableReaderMode(activity, {
@@ -88,7 +89,7 @@ class HyperRingNFC {
          * @param hyperRingTag HyperRing data.
          * @param hyperRingData: HyperRingDataInterface
          */
-        fun write(hyperRingTagId: Long?, hyperRingTag: HyperRingTag, hyperRingData: HyperRingDataInterface): Boolean {
+        fun write(hyperRingTagId: Long?, hyperRingTag: HyperRingTag, hyperRingData: HyperRingDataNFCInterface): Boolean {
             if(hyperRingTagId == null) {
                 // Write data to Any HyperRing NFC Device
             } else if(hyperRingTag.id != hyperRingTagId) {
@@ -151,8 +152,9 @@ class HyperRingNFC {
     }
 
     class NeedInitializeException: Exception("Need HyperRing NFC Initialize")
-}
+    class UnsupportedNFCException : Exception("Unsupported NFC Exception")
+    class ReadOnlyNFCException : Exception("Read only NFC.")
+    class OverMaxSizeMsgException(maxSize: Int, msgSize:Int) : Exception("NFC maxSize is $maxSize, Message maxSize is $msgSize.")
 
-class ReadOnlyNFCException : Exception("Read only NFC.")
-class OverMaxSizeMsgException(maxSize: Int, msgSize:Int) : Exception("NFC maxSize is $maxSize, Message maxSize is $msgSize.")
+}
 

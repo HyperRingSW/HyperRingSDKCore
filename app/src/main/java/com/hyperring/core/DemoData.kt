@@ -3,14 +3,14 @@ import android.nfc.NdefMessage
 import android.nfc.NdefRecord
 import android.nfc.Tag
 import android.util.Log
-import com.hyperring.sdk.core.nfc.HyperRingDataInterface
+import com.hyperring.sdk.core.data.HyperRingDataNFCInterface
 import com.hyperring.sdk.core.nfc.HyperRingNFC
 import com.hyperring.sdk.core.nfc.HyperRingTag
-import com.hyperring.sdk.core.nfc.IdData
+import com.hyperring.sdk.core.data.IdData
 import org.json.JSONObject
 import java.nio.charset.StandardCharsets
 
-class DemoData(tag: Tag?) : HyperRingDataInterface {
+class DemoData(tag: Tag?) : HyperRingDataNFCInterface {
     override var id: Long? = null
     override var data: String? = ""
     constructor(id: Long, data: String) : this(null) {

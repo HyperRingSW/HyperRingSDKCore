@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.provider.CalendarContract.Colors
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -41,7 +40,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.hyperring.core.ui.theme.HyperRingCoreTheme
 import com.hyperring.sdk.core.mfa.HyperRingMFA
-import com.hyperring.sdk.core.nfc.HyperRingData
 import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.HyperRingNFC
 import com.hyperring.sdk.core.nfc.NFCStatus
@@ -300,7 +298,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
 
 fun requestMFADialog() {
     if(MainActivity.mainActivity != null) {
-        HyperRingMFA.requestHyperRingMFAAuthentication(MainActivity.mainActivity!!, mutableListOf())
+        HyperRingMFA.requestHyperRingMFAAuthentication(MainActivity.mainActivity!!)
     }
 }
 

@@ -4,6 +4,8 @@ import android.nfc.NdefRecord
 import android.nfc.Tag
 import android.util.Log
 import com.google.gson.Gson
+import com.hyperring.sdk.core.data.HyperRingDataNFCInterface
+import com.hyperring.sdk.core.data.IdData
 import org.json.JSONObject
 import java.nio.charset.StandardCharsets
 
@@ -12,7 +14,7 @@ import java.nio.charset.StandardCharsets
  * Default Data class
  * HyperRingDataInterface contains default functions and valiables
  */
-class HyperRingData(tag: Tag?) : HyperRingDataInterface {
+class HyperRingData(tag: Tag?) : HyperRingDataNFCInterface {
     override var id: Long? = null
     override var data: String? = ""
     constructor(id: Long, data: String) : this(null) {
