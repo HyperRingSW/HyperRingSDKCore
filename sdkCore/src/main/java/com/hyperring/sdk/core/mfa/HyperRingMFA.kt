@@ -10,7 +10,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import com.hyperring.sdk.core.R
 import com.hyperring.sdk.core.data.HyperRingDataInterface
-import com.hyperring.sdk.core.data.HyperRingDataMFAInterface
+import com.hyperring.sdk.core.data.HyperRingMFAChallengeInterface
 import com.hyperring.sdk.core.data.MFAChallengeResponse
 import com.hyperring.sdk.core.nfc.HyperRingNFC
 import com.hyperring.sdk.core.nfc.HyperRingTag
@@ -23,19 +23,19 @@ import kotlinx.coroutines.runBlocking
 class HyperRingMFA {
     companion object {
         //  MFA Data (key: HyperRingTagId, value: data)
-        private var mfaData: MutableMap<Long, HyperRingDataMFAInterface> = mutableMapOf()
+        private var mfaData: MutableMap<Long, HyperRingMFAChallengeInterface> = mutableMapOf()
 
         /**
          * Init MFA MFAData (When veryfyHyperRingMFA, Using this MFA Data)
          */
-        fun initializeHyperRingMFA(mfaDataList: List<HyperRingDataMFAInterface>): Boolean {
+        fun initializeHyperRingMFA(mfaData: List<HyperRingMFAChallengeInterface>): Boolean {
             try {
-                mfaDataList.forEach {
+                mfaData.forEach {
                     if(it.id != null) {
-                        mfaData[it.id!!] = it
+                        this.mfaData[it.id!!] = it
                     }
                 }
-                if(mfaData.isEmpty()) {
+                if(this.mfaData.isEmpty()) {
                     throw MFAInitializationFailure("mfaData is Empty.")
                 }
                 return true
@@ -66,7 +66,7 @@ class HyperRingMFA {
         /**
          * Update MFA Data
          */
-        fun updateMFAData(mfaDataList: List<HyperRingDataMFAInterface>) {
+        fun updateMFAData(mfaDataList: List<HyperRingMFAChallengeInterface>) {
             mfaDataList.forEach {
                 if(it.id != null) {
                     mfaData[it.id!!] = it

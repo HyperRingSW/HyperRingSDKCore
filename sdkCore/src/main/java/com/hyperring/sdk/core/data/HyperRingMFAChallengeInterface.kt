@@ -1,9 +1,9 @@
 package com.hyperring.sdk.core.data
 
 /**
- * Default HyperRing Data Interface
+ * Default HyperRing MFA, Challenge Data Interface
  */
-interface HyperRingDataMFAInterface : HyperRingDataInterface {
+interface HyperRingMFAChallengeInterface : HyperRingDataInterface {
     var isSuccess: Boolean?
 
     override var id: Long?
@@ -13,5 +13,8 @@ interface HyperRingDataMFAInterface : HyperRingDataInterface {
 
     override fun decrypt(source: String?) :Any
 
+    /**
+     * Parts you need to implement yourself (MFA Challenge)
+     */
     fun challenge(targetData: HyperRingDataInterface): MFAChallengeResponse
 }

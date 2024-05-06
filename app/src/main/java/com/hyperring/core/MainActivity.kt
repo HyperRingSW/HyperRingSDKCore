@@ -39,7 +39,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.hyperring.core.ui.theme.HyperRingCoreTheme
-import com.hyperring.sdk.core.data.HyperRingDataMFAInterface
+import com.hyperring.sdk.core.data.HyperRingMFAChallengeInterface
 import com.hyperring.sdk.core.mfa.HyperRingMFA
 import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.HyperRingNFC
@@ -305,11 +305,11 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
 
 fun requestMFADialog() {
     if(MainActivity.mainActivity != null) {
-        val mfaDataList: MutableList<HyperRingDataMFAInterface> = mutableListOf()
-        /// TODO ID 10
-        mfaDataList.add(DemoMFAData(10, "dIW6SbrLx+dfb2ckLIMwDOScxw/4RggwXMPnrFSZikA\u003d\n", null))
+        val mfaData: MutableList<HyperRingMFAChallengeInterface> = mutableListOf()
+        // Custom Challenge
+        mfaData.add(DemoMFAChallengeData(10, "dIW6SbrLx+dfb2ckLIMwDOScxw/4RggwXMPnrFSZikA\u003d\n", null))
 
-        HyperRingMFA.initializeHyperRingMFA(mfaDataList= mfaDataList.toList())
+        HyperRingMFA.initializeHyperRingMFA(mfaData= mfaData.toList())
         HyperRingMFA.requestHyperRingMFAAuthentication(MainActivity.mainActivity!!).let {
             Log.d("MainActivity", "requestMFADialog result: ${it}")
         }
