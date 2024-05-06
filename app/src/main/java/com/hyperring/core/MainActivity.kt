@@ -41,6 +41,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.hyperring.core.ui.theme.HyperRingCoreTheme
 import com.hyperring.sdk.core.data.HyperRingDataMFAInterface
 import com.hyperring.sdk.core.mfa.HyperRingMFA
+import com.hyperring.sdk.core.nfc.HyperRingData
 import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.HyperRingNFC
 import com.hyperring.sdk.core.nfc.NFCStatus
@@ -299,6 +300,9 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
 fun requestMFADialog() {
     if(MainActivity.mainActivity != null) {
         var mfaDataList: MutableList<HyperRingDataMFAInterface> = mutableListOf()
+
+//        mfaDataList.add()
+
         HyperRingMFA.initializeHyperRingMFA(mfaDataList= mfaDataList.toList())
         HyperRingMFA.requestHyperRingMFAAuthentication(MainActivity.mainActivity!!).let {
             Log.d("MainActivity", "requestMFADialog result: ${it}")
@@ -374,17 +378,19 @@ class MainViewModel : ViewModel() {
             /// Writing Data to Any HyperRing NFC TAG
             val isWrite = HyperRingNFC.write(uiState.value.targetWriteId, hyperRingTag,
                 // Default HyperRingData
-//                HyperRingData.createData(10, mutableMapOf("age" to 20, "name" to "홍길동")))
+//                HyperRingData.createData(10, mutableMapOf("age" to 25, "name" to "홍길동")))
                 // Demo custom Data
-                DemoData.createData(10, "John Doe"))
+                DemoData.createData(10, "Jenny Doe"))
             if(isWrite && MainActivity.mainActivity != null)
                 showToast(MainActivity.mainActivity!!, "[write]${hyperRingTag.id}")
         } else {
             if(hyperRingTag.isHyperRingTag()) {
+                Log.d("MainActivity", "hyperRingTag.data: ${hyperRingTag.data}")
                 val readTag: HyperRingTag? = HyperRingNFC.read(uiState.value.targetReadId, hyperRingTag)
                 if(readTag != null) {
-                    if(MainActivity.mainActivity != null)
-                        showToast(MainActivity.mainActivity!!, "[read]${hyperRingTag.id}")
+                    if(MainActivity.mainActivity != null) showToast(MainActivity.mainActivity!!, "[read]${hyperRingTag.id}")
+                    val demoData = DemoData(readTag.id, readTag.data.data)
+                    Log.d("MainActivity", "[READ]1 demo: ${demoData.data} / ${demoData.decrypt(demoData.data)}")
                 }
             }
         }

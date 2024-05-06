@@ -10,13 +10,14 @@ interface HyperRingDataInterface {
     var id: Long?
     var data : String?
 
-    fun initData(tag: Tag?)
-    fun encrypt(data: Any?) : ByteArray {
-        throw OverrideException()
-    }
+    fun encrypt(source: Any?) : ByteArray
 
-    fun decrypt(data: String?) :Any {
-        throw OverrideException()
+    fun decrypt(source: String?) :Any
+
+    companion object {
+        fun emptyJsonString(): String {
+            return "{\"id\":null, \"data\": null}"
+        }
     }
     class OverrideException: Exception("Needs Overriding")
 }

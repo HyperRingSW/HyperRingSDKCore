@@ -1,113 +1,69 @@
 package com.hyperring.core
-import android.nfc.NdefMessage
-import android.nfc.NdefRecord
 import android.nfc.Tag
+import android.util.Base64
 import android.util.Log
-import com.hyperring.sdk.core.data.HyperRingDataNFCInterface
-import com.hyperring.sdk.core.nfc.HyperRingNFC
-import com.hyperring.sdk.core.nfc.HyperRingTag
-import com.hyperring.sdk.core.data.IdData
-import org.json.JSONObject
-import java.nio.charset.StandardCharsets
+import com.hyperring.sdk.core.nfc.HyperRingData
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.SecretKeySpec
 
-class DemoData(tag: Tag?) : HyperRingDataNFCInterface {
+/**
+ * AES Encrypt Demo
+ *
+ */
+class DemoData(tag: Tag?) : HyperRingData(tag) {
     override var id: Long? = null
     override var data: String? = ""
-    constructor(id: Long, data: String) : this(null) {
+    constructor(id: Long?, data: String?) : this(null) {
         this.id = id
         this.data = data
     }
 
-    init {
-        this.initData(tag)
-    }
-
-    override fun initData(tag: Tag?) {
-        if(tag == null) {
-            return
+    override fun encrypt(source: Any?): ByteArray {
+        if(source is String) {
+            val iv = IvParameterSpec((DEMO_KEY).toByteArray())
+            val keySpec = SecretKeySpec(DEMO_KEY.toByteArray(), "AES")    /// 키
+            val cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")     //싸이퍼
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec, iv)       // 암호화/복호화 모드
+            val crypted = cipher.doFinal(source.toByteArray())
+            val encodedByte = Base64.encode(crypted, Base64.DEFAULT)
+            Log.d("DemoData","encrypted: ${crypted}, ${encodedByte}")
+            data = String(encodedByte)
+            return encodedByte
         }
-        val ndef = HyperRingTag.getNDEF(tag)
-        if (ndef != null) {
-            try{
-                ndef.connect()
-                Log.d("HyperRing", "Demo ndef.tag: ${ndef.tag}")
-                Log.d("HyperRing", "Demo ndef.tag: ${ndef.maxSize}")
-                val msg: NdefMessage = ndef.ndefMessage
-                HyperRingNFC.logD("Demo msg: ${msg.records}")
-                if(msg.records != null) {
-                    var hrId: Long? = null
-                    var jsonData: String? = emptyJsonString()
-                    msg.records?.forEach {
-                        val payload = String(it.payload, StandardCharsets.UTF_8)
-                        if(it.tnf == NdefRecord.TNF_UNKNOWN) {
-                            val idData = fromJsonString(payload)
-                            hrId = idData.id
-                            jsonData = idData.data
-                        }
-                    }
-                    id = hrId
-                    data = jsonData
-                } else {
-                    HyperRingNFC.logD("Demo no records")
-                }
-            } catch (e : Exception) {
-                Log.d("HyperRing", "Demo ndef err:${e}")
-            } finally {
-                ndef.close()
-            }
-        } else {
-            HyperRingNFC.logD("Demo ndef is null")
+        return "".toByteArray()
+    }
+
+    override fun decrypt(source: String?): String {
+        Log.d("DemoData", "decrypt(source: $source) [${source?.length}]")
+        if(source == null) {
+            throw DecryptFailure()
         }
-    }
-
-    override fun encrypt(data: Any?): ByteArray {
-        // todo update it
-        return data.toString().toByteArray()
-    }
-
-    override fun decrypt(data: String?): Any {
-        // todo update it
-        return data.toString()
-    }
-
-    override fun ndefMessageBody(): NdefMessage {
-        Log.d("HyperRingData", "Demo ndefMessage")
-        return NdefMessage(
-            NdefRecord(
-                NdefRecord.TNF_UNKNOWN,
-                null,
-                null,
-                encryptData())
-        )
-    }
-
-    private fun encryptData(): ByteArray {
-        return encrypt(data)
-    }
-
-    override fun fromJsonString(payload: String): IdData {
-        var id : Long? = null
-        var name : String? = null
-        Log.d("HyperRingData", "Demo fromJsonString: payload: ${payload}")
-        val jsonObject = JSONObject(payload)
-        id = jsonObject.getLong("id")
-        var dataJson = jsonObject.getString("data")
-        val dataJsonObject = JSONObject(dataJson)
-        name = dataJsonObject.getString("name")
-
-        return IdData(id, name)
+        var decodedByte: ByteArray = Base64.decode(source, Base64.DEFAULT)
+        val iv = IvParameterSpec(DEMO_KEY.toByteArray())
+        val keySpec = SecretKeySpec(DEMO_KEY.toByteArray(), "AES")
+        val cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, iv)
+        val output = cipher.doFinal(decodedByte)
+        return String(output)
     }
 
     companion object {
-        fun createData(id: Long, name: String): DemoData {
-            var data = "{\"id\":$id,\"data\":\"{\\\"name\\\":\\\"$name\\\"}\"}"
-            return DemoData(id, data)
-        }
+        private var DEMO_KEY = "DEMODEMODEMODEMO"
 
-        fun emptyJsonString(): String {
-            return "{\"id\":10,\"data\":\"{\\\"name\\\":\\\"John Doe\\\"}\"}"
+        /**
+         * Return {"id": id, "data": encryptedString("name": "John doe") }
+         */
+        fun createData(id: Long, name: String): DemoData {
+            val demoData = DemoData(id, "")
+//            var jsonData = "{\"id\":$id,\"data\":\"{\\\"name\\\":\\\"$name\\\"}\"}"
+            demoData.encrypt("{\\\"name\\\":\\\"$name\\\"}")
+            return demoData
         }
     }
 
+    class DecryptFailure : Exception("Decrypt Exception")
 }
 

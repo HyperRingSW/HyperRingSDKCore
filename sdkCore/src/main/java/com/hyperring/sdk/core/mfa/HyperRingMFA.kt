@@ -165,21 +165,16 @@ class HyperRingMFA {
             }
         }
 
-        private fun processMFAChallenge(hyperRingData: HyperRingDataInterface): MFAChallengeResponse {
+        private fun processMFAChallenge(hyperRingData: HyperRingDataInterface?): MFAChallengeResponse {
             var isSuccess: Boolean? = null
-            try {
-                if (mfaData.containsKey(hyperRingData.id)) {
-                    //todo Check Logic
-                    isSuccess = true
-                } else {
-                    //todo Check Logic
-                    isSuccess = false
+            if(hyperRingData?.id == null) {
+                try {
+                    isSuccess = mfaData.containsKey(hyperRingData!!.id)
+                } catch (e: Exception) {
+                    Log.e("HyperRingMFA", "$e")
                 }
-            } catch (e: Exception) {
-              Log.e("HyperRingMFA", "$e")
             }
-
-            return MFAChallengeResponse(hyperRingData.id, hyperRingData.data, isSuccess = isSuccess)
+            return MFAChallengeResponse(hyperRingData!!.id, hyperRingData.data, isSuccess = isSuccess)
         }
 
     }

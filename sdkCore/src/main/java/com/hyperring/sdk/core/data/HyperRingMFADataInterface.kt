@@ -13,13 +13,7 @@ interface HyperRingDataMFAInterface : HyperRingDataInterface {
     override var data : String?
 
     var isSuccess: Boolean?
+    override fun encrypt(source: Any?) : ByteArray
 
-    override fun initData(tag: Tag?)
-    override fun encrypt(data: Any?) : ByteArray {
-        throw HyperRingDataInterface.OverrideException()
-    }
-
-    override fun decrypt(data: String?) :Any {
-        throw HyperRingDataInterface.OverrideException()
-    }
+    override fun decrypt(source: String?) :Any
 }

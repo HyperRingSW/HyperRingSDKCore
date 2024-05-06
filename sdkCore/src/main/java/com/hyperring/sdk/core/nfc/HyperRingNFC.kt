@@ -89,7 +89,7 @@ class HyperRingNFC {
          * @param hyperRingTag HyperRing data.
          * @param hyperRingData: HyperRingDataInterface
          */
-        fun write(hyperRingTagId: Long?, hyperRingTag: HyperRingTag, hyperRingData: HyperRingDataNFCInterface): Boolean {
+        fun write(hyperRingTagId: Long?, hyperRingTag: HyperRingTag, hyperRingData: HyperRingData): Boolean {
             if(hyperRingTagId == null) {
                 // Write data to Any HyperRing NFC Device
             } else if(hyperRingTag.id != hyperRingTagId) {
