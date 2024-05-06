@@ -4,8 +4,6 @@ import android.util.Base64
 import android.util.Log
 import com.hyperring.sdk.core.nfc.HyperRingData
 import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
@@ -13,7 +11,7 @@ import javax.crypto.spec.SecretKeySpec
  * AES Encrypt Demo
  *
  */
-class DemoData(tag: Tag?) : HyperRingData(tag) {
+class DemoNFCData(tag: Tag?) : HyperRingData(tag) {
     override var id: Long? = null
     override var data: String? = ""
     constructor(id: Long?, data: String?) : this(null) {
@@ -56,11 +54,11 @@ class DemoData(tag: Tag?) : HyperRingData(tag) {
         /**
          * Return {"id": id, "data": encryptedString("name": "John doe") }
          */
-        fun createData(id: Long, name: String): DemoData {
-            val demoData = DemoData(id, "")
+        fun createData(id: Long, name: String): DemoNFCData {
+            val demoNFCData = DemoNFCData(id, "")
 //            var jsonData = "{\"id\":$id,\"data\":\"{\\\"name\\\":\\\"$name\\\"}\"}"
-            demoData.encrypt("{\\\"name\\\":\\\"$name\\\"}")
-            return demoData
+            demoNFCData.encrypt("{\\\"name\\\":\\\"$name\\\"}")
+            return demoNFCData
         }
     }
 

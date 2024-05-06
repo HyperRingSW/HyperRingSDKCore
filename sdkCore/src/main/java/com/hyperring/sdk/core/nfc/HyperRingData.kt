@@ -4,9 +4,7 @@ import android.nfc.NdefRecord
 import android.nfc.Tag
 import android.util.Log
 import com.google.gson.Gson
-import com.hyperring.sdk.core.data.HyperRingDataInterface.Companion.emptyJsonString
 import com.hyperring.sdk.core.data.HyperRingDataNFCInterface
-import com.hyperring.sdk.core.data.IdData
 import org.json.JSONObject
 import java.nio.charset.StandardCharsets
 

@@ -11,7 +11,7 @@ import android.widget.Toast
 import com.hyperring.sdk.core.R
 import com.hyperring.sdk.core.data.HyperRingDataInterface
 import com.hyperring.sdk.core.data.HyperRingDataMFAInterface
-import com.hyperring.sdk.core.data.HyperRingDataNFCInterface
+import com.hyperring.sdk.core.data.MFAChallengeResponse
 import com.hyperring.sdk.core.nfc.HyperRingNFC
 import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.NFCStatus
@@ -34,6 +34,9 @@ class HyperRingMFA {
                     if(it.id != null) {
                         mfaData[it.id!!] = it
                     }
+                }
+                if(mfaData.isEmpty()) {
+                    throw MFAInitializationFailure("mfaData is Empty.")
                 }
                 return true
             } catch (e: Exception) {
@@ -109,7 +112,7 @@ class HyperRingMFA {
         }
 
         private fun showMFADialog(activity: Activity): MFAChallengeResponse? {
-            var successData : MFAChallengeResponse? = null
+            var mfaChallengeResponse : MFAChallengeResponse? = null
 
             HyperRingNFC.initializeHyperRingNFC(activity)
             if(HyperRingNFC.getNFCStatus() == NFCStatus.NFC_UNSUPPORTED) {
@@ -118,22 +121,26 @@ class HyperRingMFA {
 
             if(HyperRingNFC.getNFCStatus() == NFCStatus.NFC_DISABLED) {
                 Toast.makeText(activity, "Please enable NFC", Toast.LENGTH_SHORT).show()
+                return null
             }
 
             runBlocking {
                 val dialog = Dialog(activity)
                 fun onDiscovered(tag: HyperRingTag): HyperRingTag {
                     activity.runOnUiThread {
-                        Toast.makeText(activity, "Tagged", Toast.LENGTH_SHORT).show()
                         val mfaData = processMFAChallenge(tag.data)
 
-                        var image: ImageView = dialog.findViewById(R.id.image)
+                        val image: ImageView = dialog.findViewById(R.id.image)
                         if(mfaData.isSuccess == true) {
-                            successData = mfaData
+                            mfaChallengeResponse = mfaData
                             image.setImageResource(R.drawable.img_success)
-                            if(dialog.isShowing) {
-                                dialog.dismiss()
-                            }
+                            Handler(Looper.getMainLooper()).postDelayed(Runnable {
+                                activity.runOnUiThread {
+                                    if(dialog.isShowing) {
+                                        dialog.dismiss()
+                                    }
+                                }
+                            }, 1000)
                         } else {
                             // Failed
                             image.setImageResource(R.drawable.img_failed)
@@ -158,23 +165,24 @@ class HyperRingMFA {
                 dialog.window?.setAttributes(lp)
                 dialog.setOnDismissListener {
                     HyperRingNFC.stopNFCTagPolling(activity)
-                    Toast.makeText(activity, "Close MFA UI", Toast.LENGTH_SHORT).show()
                 }
             }.let {
-                return successData
+                return mfaChallengeResponse
             }
         }
 
+        /**
+         * Return challenge hyperRingData with mfaData[hyperRingData.id]
+         */
         private fun processMFAChallenge(hyperRingData: HyperRingDataInterface?): MFAChallengeResponse {
-            var isSuccess: Boolean? = null
-            if(hyperRingData?.id == null) {
+            if(hyperRingData?.id != null && mfaData.containsKey(hyperRingData.id)) {
                 try {
-                    isSuccess = mfaData.containsKey(hyperRingData!!.id)
+                    return mfaData[hyperRingData.id]!!.challenge(hyperRingData)
                 } catch (e: Exception) {
                     Log.e("HyperRingMFA", "$e")
                 }
             }
-            return MFAChallengeResponse(hyperRingData!!.id, hyperRingData.data, isSuccess = isSuccess)
+            return MFAChallengeResponse(hyperRingData!!.id, hyperRingData.data, isSuccess = false)
         }
 
     }

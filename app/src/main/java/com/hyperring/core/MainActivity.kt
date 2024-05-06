@@ -41,7 +41,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.hyperring.core.ui.theme.HyperRingCoreTheme
 import com.hyperring.sdk.core.data.HyperRingDataMFAInterface
 import com.hyperring.sdk.core.mfa.HyperRingMFA
-import com.hyperring.sdk.core.nfc.HyperRingData
 import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.HyperRingNFC
 import com.hyperring.sdk.core.nfc.NFCStatus
@@ -100,7 +99,7 @@ fun MFABox(modifier: Modifier = Modifier) {
             .background(Color.LightGray)
             .padding(10.dp)
             .fillMaxWidth()
-            .height((180.dp))) {
+            .height((100.dp))) {
             Column(
                 modifier = modifier
                     .align(Alignment.TopCenter)
@@ -111,19 +110,6 @@ fun MFABox(modifier: Modifier = Modifier) {
                 ) {
                     Text(
                         text = "MFA",
-                        modifier = modifier.fillMaxWidth(),
-                        style = TextStyle(fontSize = 22.sp),
-                        textAlign = TextAlign.Center,
-                    )
-                }
-                Box(modifier = modifier
-                    .background(Color.LightGray)
-                    .padding(10.dp)
-                    .fillMaxWidth()
-                    .height(80.dp)
-                ) {
-                    Text(
-                        text = "[Init] Registered Service publicKey: [dfssafj111f13fa1]",
                         modifier = modifier.fillMaxWidth(),
                         style = TextStyle(fontSize = 22.sp),
                         textAlign = TextAlign.Center,
@@ -148,7 +134,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
             .background(Color.LightGray)
             .padding(10.dp)
             .fillMaxWidth()
-            .height((220.dp))) {
+            .height((280.dp))) {
             Column(
                 modifier = modifier
                     .align(Alignment.TopCenter)
@@ -262,36 +248,56 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                                 ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
-                                setWriteTargetId(viewModel, 10)
+                                setWriteTargetId(viewModel, 10, 10)
                             }) {
-                            Text("[Write] Write to ID-10 TAG", textAlign = TextAlign.Center)
+                            Text("[Write] to ID-10 TAG", textAlign = TextAlign.Center)
                         }
                     }
-                    Box(modifier = modifier
-                        .background(Color.LightGray)
-                        .width(10.dp))
+
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .wrapContentWidth(Alignment.Start)) {
+                    }
+                }
+                if(viewModel.uiState.collectAsState().value.isWriteMode) Row() {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentWidth(Alignment.Start)
+                    ) {
                         FilledTonalButton(
                             modifier = modifier.fillMaxWidth(),
-                            colors = if(viewModel.uiState.collectAsState().value.targetWriteId == null)
+                            colors = if (viewModel.uiState.collectAsState().value.targetWriteId == null
+                                && viewModel.uiState.collectAsState().value.dataTagId == 10L)
                                 ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
-                                setWriteTargetId(viewModel, null)
+                                setWriteTargetId(viewModel, null, 10)
                             }
                         ) {
-                            Text("[Write] Write to Any TAG", textAlign = TextAlign.Center)
+                            Text("[Write] to Any TAG(data 10)", textAlign = TextAlign.Center)
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentWidth(Alignment.Start)
+                    ) {
+                        FilledTonalButton(
+                            modifier = modifier.fillMaxWidth(),
+                            colors = if (viewModel.uiState.collectAsState().value.targetWriteId == null
+                                && viewModel.uiState.collectAsState().value.dataTagId == 15L)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                            else ButtonDefaults.outlinedButtonColors(),
+                            onClick = {
+                                setWriteTargetId(viewModel, null, 15)
+                            }
+                        ) {
+                            Text("[Write] to Any TAG(data 15)", textAlign = TextAlign.Center)
                         }
                     }
                 }
-                Box(
-                    modifier = modifier
-                        .background(Color.LightGray)
-                        .height(10.dp)
-                        .fillMaxWidth())
             }
         }
     }
@@ -299,9 +305,9 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
 
 fun requestMFADialog() {
     if(MainActivity.mainActivity != null) {
-        var mfaDataList: MutableList<HyperRingDataMFAInterface> = mutableListOf()
-
-//        mfaDataList.add()
+        val mfaDataList: MutableList<HyperRingDataMFAInterface> = mutableListOf()
+        /// TODO ID 10
+        mfaDataList.add(DemoMFAData(10, "dIW6SbrLx+dfb2ckLIMwDOScxw/4RggwXMPnrFSZikA\u003d\n", null))
 
         HyperRingMFA.initializeHyperRingMFA(mfaDataList= mfaDataList.toList())
         HyperRingMFA.requestHyperRingMFAAuthentication(MainActivity.mainActivity!!).let {
@@ -314,8 +320,8 @@ fun setReadTargetId(viewModel: MainViewModel, id: Long?) {
     viewModel.setReadTargetId(id)
 }
 
-fun setWriteTargetId(viewModel: MainViewModel, id: Long?) {
-    viewModel.setWriteTargetId(id)
+fun setWriteTargetId(viewModel: MainViewModel, id: Long?, dataId: Long) {
+    viewModel.setWriteTargetId(id, dataId)
 }
 
 fun toggleNFCMode(viewModel: MainViewModel) {
@@ -355,7 +361,8 @@ data class MainUiState(
     val isPolling: Boolean = false,
     var isWriteMode : Boolean = false,
     var targetWriteId: Long? = null,
-    var targetReadId: Long? = null
+    var targetReadId: Long? = null,
+    var dataTagId: Long? = 10
 )
 
 class MainViewModel : ViewModel() {
@@ -380,17 +387,17 @@ class MainViewModel : ViewModel() {
                 // Default HyperRingData
 //                HyperRingData.createData(10, mutableMapOf("age" to 25, "name" to "홍길동")))
                 // Demo custom Data
-                DemoData.createData(10, "Jenny Doe"))
+                DemoNFCData.createData(uiState.value.dataTagId?:10, "Jenny Doe"))
             if(isWrite && MainActivity.mainActivity != null)
-                showToast(MainActivity.mainActivity!!, "[write]${hyperRingTag.id}")
+                showToast(MainActivity.mainActivity!!, "[write] Success [${uiState.value.dataTagId}]")
         } else {
             if(hyperRingTag.isHyperRingTag()) {
                 Log.d("MainActivity", "hyperRingTag.data: ${hyperRingTag.data}")
                 val readTag: HyperRingTag? = HyperRingNFC.read(uiState.value.targetReadId, hyperRingTag)
                 if(readTag != null) {
                     if(MainActivity.mainActivity != null) showToast(MainActivity.mainActivity!!, "[read]${hyperRingTag.id}")
-                    val demoData = DemoData(readTag.id, readTag.data.data)
-                    Log.d("MainActivity", "[READ]1 demo: ${demoData.data} / ${demoData.decrypt(demoData.data)}")
+                    val demoNFCData = DemoNFCData(readTag.id, readTag.data.data)
+                    Log.d("MainActivity", "[READ]1 : ${demoNFCData.data} / ${demoNFCData.decrypt(demoNFCData.data)}")
                 }
             }
         }
@@ -434,10 +441,11 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun setWriteTargetId(id: Long?) {
+    fun setWriteTargetId(id: Long?, dataId: Long) {
         _uiState.update { currentState ->
             currentState.copy(
-                targetWriteId = id
+                targetWriteId = id,
+                dataTagId = dataId
             )
         }
     }
