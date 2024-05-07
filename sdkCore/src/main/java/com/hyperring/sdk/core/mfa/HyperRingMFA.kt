@@ -106,9 +106,9 @@ class HyperRingMFA {
          *
          * @param activity
          */
-        fun requestHyperRingMFAAuthentication(activity: Activity): Boolean {
+        fun requestHyperRingMFAAuthentication(activity: Activity): MFAChallengeResponse {
             val mfaChallengeResponse: MFAChallengeResponse? = showMFADialog(activity)
-            return mfaChallengeResponse != null && mfaChallengeResponse.isSuccess == true
+            return mfaChallengeResponse?: MFAChallengeResponse(null, null, null)
         }
 
         private fun showMFADialog(activity: Activity): MFAChallengeResponse? {

@@ -99,7 +99,7 @@ fun MFABox(modifier: Modifier = Modifier) {
             .background(Color.LightGray)
             .padding(10.dp)
             .fillMaxWidth()
-            .height((100.dp))) {
+            .height((140.dp))) {
             Column(
                 modifier = modifier
                     .align(Alignment.TopCenter)
@@ -112,6 +112,17 @@ fun MFABox(modifier: Modifier = Modifier) {
                         text = "MFA",
                         modifier = modifier.fillMaxWidth(),
                         style = TextStyle(fontSize = 22.sp),
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                Box(modifier = modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                ) {
+                    Text(
+                        text = "If HyperRing has Data(id:10), Success.\nNFC Tab -> Writing Mode -> [Write] to Any Tag(data 10)",
+                        modifier = modifier.fillMaxWidth(),
+                        style = TextStyle(fontSize = 15.sp),
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -312,6 +323,9 @@ fun requestMFADialog() {
         HyperRingMFA.initializeHyperRingMFA(mfaData= mfaData.toList())
         HyperRingMFA.requestHyperRingMFAAuthentication(MainActivity.mainActivity!!).let {
             Log.d("MainActivity", "requestMFADialog result: ${it}")
+            HyperRingMFA.verifyHyperRingMFAAuthentication(it).let {
+                showToast(MainActivity.mainActivity!!, if(it) "Success" else "Failed")
+            }
         }
     }
 }
