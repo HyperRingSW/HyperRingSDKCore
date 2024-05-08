@@ -1,5 +1,6 @@
 package com.hyperring.core
 import android.app.Activity
+import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.os.Handler
@@ -40,6 +41,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.hyperring.core.ui.theme.HyperRingCoreTheme
 import com.hyperring.sdk.core.data.HyperRingMFAChallengeInterface
+import com.hyperring.sdk.core.data.MFAChallengeResponse
 import com.hyperring.sdk.core.mfa.HyperRingMFA
 import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.HyperRingNFC
@@ -99,7 +101,7 @@ fun MFABox(modifier: Modifier = Modifier) {
             .background(Color.LightGray)
             .padding(10.dp)
             .fillMaxWidth()
-            .height((140.dp))) {
+            .height((200.dp))) {
             Column(
                 modifier = modifier
                     .align(Alignment.TopCenter)
@@ -117,7 +119,7 @@ fun MFABox(modifier: Modifier = Modifier) {
                 }
                 Box(modifier = modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(60.dp)
                 ) {
                     Text(
                         text = "If HyperRing has Data(id:10), Success.\nNFC Tab -> Writing Mode -> [Write] to Any Tag(data 10)",
@@ -131,7 +133,14 @@ fun MFABox(modifier: Modifier = Modifier) {
                     onClick = {
                         requestMFADialog()
                     }) {
-                    Text("Open requestAuthPage()", textAlign = TextAlign.Center)
+                    Text("Open requestAuthPage(autoDismiss=false)", textAlign = TextAlign.Center)
+                }
+                FilledTonalButton(
+                    modifier = modifier.fillMaxWidth(),
+                    onClick = {
+                        requestMFADialog(autoDismiss=true)
+                    }) {
+                    Text("Open requestAuthPage(autoDismiss=true)", textAlign = TextAlign.Center)
                 }
             }
         }
@@ -314,19 +323,27 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
     }
 }
 
-fun requestMFADialog() {
+fun requestMFADialog(autoDismiss: Boolean=false) {
     if(MainActivity.mainActivity != null) {
         val mfaData: MutableList<HyperRingMFAChallengeInterface> = mutableListOf()
         // Custom Challenge
         mfaData.add(DemoMFAChallengeData(10, "dIW6SbrLx+dfb2ckLIMwDOScxw/4RggwXMPnrFSZikA\u003d\n", null))
-
         HyperRingMFA.initializeHyperRingMFA(mfaData= mfaData.toList())
-        HyperRingMFA.requestHyperRingMFAAuthentication(MainActivity.mainActivity!!).let {
-            Log.d("MainActivity", "requestMFADialog result: ${it}")
-            HyperRingMFA.verifyHyperRingMFAAuthentication(it).let {
+
+        fun onDiscovered(dialog: Dialog?, response: MFAChallengeResponse?) {
+            Log.d("MainActivity", "requestMFADialog result: ${response}}")
+            HyperRingMFA.verifyHyperRingMFAAuthentication(response).let {
                 showToast(MainActivity.mainActivity!!, if(it) "Success" else "Failed")
+                if(it && autoDismiss) {
+                    dialog?.dismiss()
+                }
             }
         }
+
+        HyperRingMFA.requestHyperRingMFAAuthentication(
+            activity = MainActivity.mainActivity!!,
+            onNFCDiscovered = ::onDiscovered,
+            autoDismiss = autoDismiss)
     }
 }
 

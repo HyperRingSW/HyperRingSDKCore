@@ -15,7 +15,10 @@ import com.hyperring.sdk.core.data.MFAChallengeResponse
 import com.hyperring.sdk.core.nfc.HyperRingNFC
 import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.NFCStatus
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 /**
  * jwt base demo
@@ -77,7 +80,10 @@ class HyperRingMFA {
         /**
          * Compare HyperRingTag`s MFA Data and Saved MFA(from initializeHyperRingMFA function)
          */
-        fun verifyHyperRingMFAAuthentication(response: MFAChallengeResponse): Boolean {
+        fun verifyHyperRingMFAAuthentication(response: MFAChallengeResponse?): Boolean {
+            if(response == null) {
+                return false
+            }
             try {
                 if (mfaData.containsKey(response.id)) {
                     return isValidResponse(response)
@@ -105,69 +111,80 @@ class HyperRingMFA {
          * else idList is exist. Check only that ids with saved MFA data
          *
          * @param activity
+         * @param onNFCDiscovered NFC onDiscovered Code. return Dialog, Response
          */
-        fun requestHyperRingMFAAuthentication(activity: Activity): MFAChallengeResponse {
-            val mfaChallengeResponse: MFAChallengeResponse? = showMFADialog(activity)
-            return mfaChallengeResponse?: MFAChallengeResponse(null, null, null)
+        fun requestHyperRingMFAAuthentication(
+            activity: Activity,
+            onNFCDiscovered: (Dialog?, MFAChallengeResponse?) -> Unit?,
+            autoDismiss: Boolean = false
+            ) {
+            showMFADialog(activity, eventListener = onNFCDiscovered, autoDismiss = autoDismiss)
         }
 
-        private fun showMFADialog(activity: Activity): MFAChallengeResponse? {
-            var mfaChallengeResponse : MFAChallengeResponse? = null
+        private fun showMFADialog(
+            activity: Activity,
+            eventListener: (Dialog?, MFAChallengeResponse?) -> Unit?,
+            autoDismiss: Boolean = true
+            ) {
+            var mfaChallengeResponse: MFAChallengeResponse? = null
 
             HyperRingNFC.initializeHyperRingNFC(activity)
-            if(HyperRingNFC.getNFCStatus() == NFCStatus.NFC_UNSUPPORTED) {
+            if (HyperRingNFC.getNFCStatus() == NFCStatus.NFC_UNSUPPORTED) {
                 throw HyperRingNFC.UnsupportedNFCException()
             }
 
-            if(HyperRingNFC.getNFCStatus() == NFCStatus.NFC_DISABLED) {
+            if (HyperRingNFC.getNFCStatus() == NFCStatus.NFC_DISABLED) {
                 Toast.makeText(activity, "Please enable NFC", Toast.LENGTH_SHORT).show()
-                return null
+                return
             }
 
-            runBlocking {
-                val dialog = Dialog(activity)
-                fun onDiscovered(tag: HyperRingTag): HyperRingTag {
+            var dialog: Dialog? = null
+
+            fun onDiscovered(tag: HyperRingTag): HyperRingTag {
+                mfaChallengeResponse = processMFAChallenge(tag.data)
+                eventListener(dialog, mfaChallengeResponse)
+                val image: ImageView? = dialog?.findViewById(R.id.image)
+                if(mfaChallengeResponse?.isSuccess == true) {
                     activity.runOnUiThread {
-                        val mfaData = processMFAChallenge(tag.data)
-
-                        val image: ImageView = dialog.findViewById(R.id.image)
-                        if(mfaData.isSuccess == true) {
-                            mfaChallengeResponse = mfaData
-                            image.setImageResource(R.drawable.img_success)
-                            Handler(Looper.getMainLooper()).postDelayed(Runnable {
-                                activity.runOnUiThread {
-                                    if(dialog.isShowing) {
-                                        dialog.dismiss()
-                                    }
+                        image?.setImageResource(R.drawable.img_success)
+                        Handler(Looper.getMainLooper()).postDelayed(Runnable {
+                            if(dialog?.isShowing == true) {
+                                if(autoDismiss) {
+                                    dialog?.dismiss()
                                 }
-                            }, 1000)
-                        } else {
-                            // Failed
-                            image.setImageResource(R.drawable.img_failed)
-                            Handler(Looper.getMainLooper()).postDelayed(Runnable {
-                                activity.runOnUiThread {
-                                    image.setImageResource(R.drawable.img_ready)
-                                }
-                            }, 1000)
-                        }
+                                image?.setImageResource(R.drawable.img_ready)
+                            }
+                        }, 1000)
                     }
-                    return tag
-                }
+                } else {
+                    // Failed
+                    activity.runOnUiThread {
+                        image?.setImageResource(R.drawable.img_failed)
+                        Handler(Looper.getMainLooper()).postDelayed(Runnable {
+                            image?.setImageResource(R.drawable.img_ready)
+                        }, 1000)
+                    }
 
-                HyperRingNFC.startNFCTagPolling(activity, onDiscovered= :: onDiscovered)
-                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-                dialog.setCancelable(true)
-                dialog.setContentView(R.layout.custom_layout)
-                val lp = WindowManager.LayoutParams()
-                lp.copyFrom(dialog.window?.attributes)
-                lp.width = WindowManager.LayoutParams.MATCH_PARENT
-                dialog.show()
-                dialog.window?.setAttributes(lp)
-                dialog.setOnDismissListener {
-                    HyperRingNFC.stopNFCTagPolling(activity)
                 }
-            }.let {
-                return mfaChallengeResponse
+                return tag
+            }
+
+            CoroutineScope(Dispatchers.Main).launch {
+                activity.runOnUiThread {
+                    dialog = Dialog(activity)
+                    dialog?.requestWindowFeature(Window.FEATURE_NO_TITLE)
+                    dialog?.setCancelable(true)
+                    dialog?.setContentView(R.layout.custom_layout)
+                    val lp = WindowManager.LayoutParams()
+                    lp.copyFrom(dialog?.window?.attributes)
+                    lp.width = WindowManager.LayoutParams.MATCH_PARENT
+                    dialog?.show()
+                    dialog?.window?.setAttributes(lp)
+                    dialog?.setOnDismissListener {
+                        HyperRingNFC.stopNFCTagPolling(activity)
+                    }
+                }
+                HyperRingNFC.startNFCTagPolling(activity, onDiscovered = ::onDiscovered)
             }
         }
 

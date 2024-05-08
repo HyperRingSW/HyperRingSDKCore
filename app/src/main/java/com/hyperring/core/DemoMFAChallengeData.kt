@@ -54,11 +54,13 @@ class DemoMFAChallengeData(tag: Tag?) : HyperRingMFAChallengeInterface {
      * @param targetData
      */
     override fun challenge(targetData: HyperRingDataInterface): MFAChallengeResponse {
-        return if(decrypt(data) == decrypt(targetData.data)) {
-            MFAChallengeResponse(targetData.id, targetData.data, true)
+        var res: MFAChallengeResponse
+        if(decrypt(data) == decrypt(targetData.data)) {
+            res = MFAChallengeResponse(targetData.id, targetData.data, true)
         } else {
-            MFAChallengeResponse(targetData.id, targetData.data, false)
+            res = MFAChallengeResponse(targetData.id, targetData.data, false)
         }
+        return res
     }
 
     companion object {
