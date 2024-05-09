@@ -34,6 +34,12 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
+    packaging {
+        resources.excludes.add("META-INF/LICENSE.md")
+        resources.excludes.add("META-INF/LICENSE-notice.md")
+
+    }
 }
 
 dependencies {
@@ -48,8 +54,11 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.gson)
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    //testImplementation("io.mockk:mockk:1.13.10")
+    //androidTestImplementation("io.mockk:mockk:1.13.10")
+    androidTestImplementation ("io.mockk:mockk-android:1.13.10")
+
 }
