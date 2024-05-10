@@ -8,14 +8,18 @@ plugins {
 afterEvaluate {
     publishing {
         publications {
-            create<MavenPublication>("Release") {
+            create<MavenPublication>("maven") {
+                from (components["release"])
+                groupId = "com.github.HyperRingSW"
+                artifactId = "HyperRing Core"
+                version = "1.0.5"
                 pom {
                     name = "HyperRing Core Library"
                     description = "HyperRing NFC Device core sdk library"
                     url = "https://github.com/HyperRingSW/HyperRingSDKCore"
                     groupId = "com.github.HyperRingSW"
                     artifactId = "HyperRing Core"
-                    version = "1.0.4"
+                    version = "1.0.5"
                     licenses {
                         license {
                             name = "The Apache License, Version 2.0"
