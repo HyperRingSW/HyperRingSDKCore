@@ -1,32 +1,38 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-//    id("maven-publish")
     `maven-publish`
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            register<MavenPublication>("release") {
-                groupId = "com.github.HyperRingSW"
-                artifactId = "HyperRingCore"
-                version = "1.0.8"
-                pom {
-                    name = "HyperRingCore Library"
-                    description = "HyperRing NFC Device core sdk library"
-                    url = "https://github.com/HyperRingSW/HyperRingSDKCore"
-                    licenses {
-                        license {
-                            name = "The Apache License, Version 2.0"
-                            url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-                        }
+version = "1.0.10"
+group = "com.github.HyperRingSW"
+
+publishing {
+    publications {
+        create<MavenPublication>("library") {
+//            from(components["java"])
+            groupId = "com.github.HyperRingSW"
+            artifactId = "HyperRingCore"
+            version = "1.0.9"
+            pom {
+                name = "HyperRingCore Library"
+                description = "HyperRing NFC Device core sdk library"
+                url = "https://github.com/HyperRingSW/HyperRingSDKCore"
+                licenses {
+                    license {
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
                     }
                 }
-                afterEvaluate {
-                    from(components["release"])
-                }
             }
+            afterEvaluate {
+                from(components["release"])
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = uri(layout.buildDirectory.dir("publishing-repository"))
         }
     }
 }
@@ -70,6 +76,38 @@ android {
     }
 }
 
+//afterEvaluate {
+//    publishing {
+//        publications {
+//            register<MavenPublication>("release") {
+//                groupId = "com.github.HyperRingSW"
+//                artifactId = "HyperRingCore"
+//                version = "1.0.9"
+//                pom {
+//                    name = "HyperRingCore Library"
+//                    description = "HyperRing NFC Device core sdk library"
+//                    url = "https://github.com/HyperRingSW/HyperRingSDKCore"
+//                    licenses {
+//                        license {
+//                            name = "The Apache License, Version 2.0"
+//                            url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+//                        }
+//                    }
+//                }
+//                afterEvaluate {
+//                    from(components["release"])
+//                }
+//            }
+//        }
+//        repositories {
+//            maven {
+//                name = "HyperRingCore"
+//                url = uri("${project.layout.buildDirectory}/repo")
+//            }
+//        }
+//    }
+//}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
 //    implementation(libs.androidx.appcompat)
@@ -88,5 +126,4 @@ dependencies {
     //testImplementation("io.mockk:mockk:1.13.10")
     //androidTestImplementation("io.mockk:mockk:1.13.10")
     androidTestImplementation ("io.mockk:mockk-android:1.13.10")
-
 }
