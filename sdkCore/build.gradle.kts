@@ -1,6 +1,27 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    `maven-publish`
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("mavenJava") {
+                pom {
+                    name = "HyperRing Core Library"
+                    description = "HyperRing NFC Device core sdk library"
+                    url = "https://github.com/HyperRingSW/HyperRingSDKCore"
+                    licenses {
+                        license {
+                            name = "The Apache License, Version 2.0"
+                            url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 android {
