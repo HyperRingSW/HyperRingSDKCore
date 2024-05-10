@@ -9,6 +9,7 @@ plugins {
 buildscript {
     dependencies {
         classpath (libs.android.maven.gradle.plugin)
+
     }
 }
 
