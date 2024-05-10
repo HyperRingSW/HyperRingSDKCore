@@ -14,7 +14,7 @@ afterEvaluate {
                     url = "https://github.com/HyperRingSW/HyperRingSDKCore"
                     groupId = "com.github.HyperRingSW"
                     artifactId = "hyperring-core"
-                    version = "1.0.0"
+                    version = "1.0.2"
                     licenses {
                         license {
                             name = "The Apache License, Version 2.0"
