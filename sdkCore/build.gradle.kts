@@ -12,14 +12,14 @@ afterEvaluate {
                 from (components["release"])
                 groupId = "com.github.HyperRingSW"
                 artifactId = "HyperRing Core"
-                version = "1.0.5"
+                version = "1.0.6"
                 pom {
                     name = "HyperRing Core Library"
                     description = "HyperRing NFC Device core sdk library"
                     url = "https://github.com/HyperRingSW/HyperRingSDKCore"
                     groupId = "com.github.HyperRingSW"
                     artifactId = "HyperRing Core"
-                    version = "1.0.5"
+                    version = "1.0.7"
                     licenses {
                         license {
                             name = "The Apache License, Version 2.0"
@@ -57,11 +57,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 
     packaging {
