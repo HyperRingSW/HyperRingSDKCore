@@ -12,6 +12,9 @@ afterEvaluate {
                     name = "HyperRing Core Library"
                     description = "HyperRing NFC Device core sdk library"
                     url = "https://github.com/HyperRingSW/HyperRingSDKCore"
+                    groupId = "com.github.HyperRingSW"
+                    artifactId = "hyperring-core"
+                    version = "1.0.0"
                     licenses {
                         license {
                             name = "The Apache License, Version 2.0"
