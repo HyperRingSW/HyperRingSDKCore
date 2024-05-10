@@ -1,5 +1,6 @@
 [versions]
 agp = "8.4.0"
+androidMaven = "2.1"
 androidMavenGradlePlugin = "2.1"
 gson = "2.10.1"
 kotlin = "1.9.0"
@@ -16,6 +17,7 @@ mockitoKotlin = "5.3.1"
 robolectric = "4.12.1"
 
 [libraries]
+android-maven = { module = "com.github.dcendents:android-maven", version.ref = "androidMaven" }
 android-maven-gradle-plugin = { module = "com.github.dcendents:android-maven-gradle-plugin", version.ref = "androidMavenGradlePlugin" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }

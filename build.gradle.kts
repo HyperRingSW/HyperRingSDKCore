@@ -3,15 +3,13 @@ plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.jetbrainsKotlinAndroid) apply false
     alias(libs.plugins.androidLibrary) apply false
-    id("maven-publish")
-//    `maven-publish`
+//    id("maven-publish")
+    `maven-publish`
 }
 
 buildscript {
     dependencies {
         classpath (libs.android.maven.gradle.plugin)
-
+        classpath (libs.android.maven)
     }
 }
-
-//url = "https://github.com/HyperRingSW/HyperRingSDKCore"

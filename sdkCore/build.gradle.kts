@@ -1,31 +1,30 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    id("maven-publish")
-//    `maven-publish`
+//    id("maven-publish")
+    `maven-publish`
 }
 
 afterEvaluate {
     publishing {
         publications {
-            create<MavenPublication>("maven") {
-                from (components["release"])
+            register<MavenPublication>("release") {
                 groupId = "com.github.HyperRingSW"
-                artifactId = "HyperRing Core"
-                version = "1.0.6"
+                artifactId = "HyperRingCore"
+                version = "1.0.8"
                 pom {
-                    name = "HyperRing Core Library"
+                    name = "HyperRingCore Library"
                     description = "HyperRing NFC Device core sdk library"
                     url = "https://github.com/HyperRingSW/HyperRingSDKCore"
-                    groupId = "com.github.HyperRingSW"
-                    artifactId = "HyperRing Core"
-                    version = "1.0.7"
                     licenses {
                         license {
                             name = "The Apache License, Version 2.0"
                             url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
                         }
                     }
+                }
+                afterEvaluate {
+                    from(components["release"])
                 }
             }
         }
@@ -57,11 +56,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 
     packaging {
