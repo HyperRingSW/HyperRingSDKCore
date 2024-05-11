@@ -1,7 +1,8 @@
-package com.hyperring.core
+package com.hyperring.core.data.mfa
 import android.nfc.Tag
 import android.util.Base64
 import android.util.Log
+import com.hyperring.core.data.nfc.AESHRData
 import com.hyperring.sdk.core.data.HyperRingDataInterface
 import com.hyperring.sdk.core.data.HyperRingMFAChallengeInterface
 import com.hyperring.sdk.core.data.MFAChallengeResponse
@@ -9,7 +10,10 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-class DemoMFAChallengeData(tag: Tag?) : HyperRingMFAChallengeInterface {
+/**
+ * MFA Challenge Data with AES
+ */
+class AESMFAChallengeData(tag: Tag?) : HyperRingMFAChallengeInterface {
     override var id: Long? = null
     override var data: String? = ""
     override var isSuccess: Boolean? = null
@@ -21,8 +25,8 @@ class DemoMFAChallengeData(tag: Tag?) : HyperRingMFAChallengeInterface {
 
     override fun encrypt(source: Any?): ByteArray {
         if(source is String) {
-            val iv = IvParameterSpec((DemoMFAChallengeData.DEMO_KEY).toByteArray())
-            val keySpec = SecretKeySpec(DemoMFAChallengeData.DEMO_KEY.toByteArray(), "AES")    /// 키
+            val iv = IvParameterSpec((DEMO_KEY).toByteArray())
+            val keySpec = SecretKeySpec(DEMO_KEY.toByteArray(), "AES")    /// 키
             val cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")     //싸이퍼
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, iv)       // 암호화/복호화 모드
             val crypted = cipher.doFinal(source.toByteArray())
@@ -39,8 +43,8 @@ class DemoMFAChallengeData(tag: Tag?) : HyperRingMFAChallengeInterface {
             throw AESHRData.DecryptFailure()
         }
         var decodedByte: ByteArray = Base64.decode(source, Base64.DEFAULT)
-        val iv = IvParameterSpec(DemoMFAChallengeData.DEMO_KEY.toByteArray())
-        val keySpec = SecretKeySpec(DemoMFAChallengeData.DEMO_KEY.toByteArray(), "AES")
+        val iv = IvParameterSpec(DEMO_KEY.toByteArray())
+        val keySpec = SecretKeySpec(DEMO_KEY.toByteArray(), "AES")
         val cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")
         cipher.init(Cipher.DECRYPT_MODE, keySpec, iv)
         val output = cipher.doFinal(decodedByte)
@@ -66,9 +70,9 @@ class DemoMFAChallengeData(tag: Tag?) : HyperRingMFAChallengeInterface {
     companion object {
         val DEMO_KEY = "DEMODEMODEMODEMO"
 
-        fun createData(id: Long, name: String): DemoMFAChallengeData {
+        fun createData(id: Long, name: String): AESMFAChallengeData {
             var data = "{\"id\":$id,\"data\":\"{\\\"name\\\":\\\"$name\\\"}\"}"
-            return DemoMFAChallengeData(id, data, null)
+            return AESMFAChallengeData(id, data, null)
         }
 
     }

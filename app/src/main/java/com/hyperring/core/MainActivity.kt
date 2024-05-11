@@ -39,18 +39,25 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.hyperring.core.data.mfa.AESMFAChallengeData
+import com.hyperring.core.data.mfa.JWTMFAChallengeData
+import com.hyperring.core.data.nfc.AESHRData
+import com.hyperring.core.data.nfc.JWTHRData
 import com.hyperring.core.ui.theme.HyperRingCoreTheme
 import com.hyperring.sdk.core.data.HyperRingMFAChallengeInterface
 import com.hyperring.sdk.core.data.MFAChallengeResponse
 import com.hyperring.sdk.core.mfa.HyperRingMFA
-import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.HyperRingNFC
+import com.hyperring.sdk.core.nfc.HyperRingTag
 import com.hyperring.sdk.core.nfc.NFCStatus
+import io.jsonwebtoken.Jwts
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.crypto.SecretKey
+
 
 /**
  * Demo Application
@@ -60,6 +67,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         var mainActivity: ComponentActivity? = null
+        val jwtKey: SecretKey = Jwts.SIG.HS256.key().build()
     }
 
     override fun onResume() {
@@ -68,6 +76,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("JWT", "$jwtKey");
         mainActivity = this
         mainViewModel = ViewModelProvider(this)[MainViewModel::class.java]
         lifecycleScope.launch {
@@ -154,7 +163,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
             .background(Color.LightGray)
             .padding(10.dp)
             .fillMaxWidth()
-            .height((280.dp))) {
+            .height((340.dp))) {
             Column(
                 modifier = modifier
                     .align(Alignment.TopCenter)
@@ -191,10 +200,6 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                             modifier = modifier.fillMaxWidth(),
                             onClick = {
                                 togglePolling(context, viewModel, viewModel.uiState.value.isPolling)
-//                                HyperRingNFC.startNFCTagPolling(
-//                                    context as Activity,
-//                                    onDiscovered = :: onDiscovered
-//                                )
                             }) {
                             Text("[readHyperRing]\n" + "isPolling: ${viewModel.uiState.collectAsState().value.isPolling}", textAlign = TextAlign.Center)
                         }
@@ -221,20 +226,23 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                         .background(Color.LightGray)
                         .height(10.dp)
                         .fillMaxWidth())
-                if(!viewModel.uiState.collectAsState().value.isWriteMode) Row() {
+                    if(!viewModel.uiState.collectAsState().value.isWriteMode) Row() {
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .wrapContentWidth(Alignment.Start)) {
                         FilledTonalButton(
                             modifier = modifier.fillMaxWidth(),
-                            colors = if(viewModel.uiState.collectAsState().value.targetReadId == 10L)
+                            colors = if(
+                                viewModel.uiState.collectAsState().value.dateType == "AES"
+                                && viewModel.uiState.collectAsState().value.targetReadId == 10L)
                                 ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
+                                setDataType(viewModel, "AES")
                                 setReadTargetId(viewModel, 10)
                             }) {
-                            Text("[Read] Read to only ID-10 TAG", textAlign = TextAlign.Center)
+                            Text("[Read-AES] Read to only ID-10 TAG", textAlign = TextAlign.Center)
                         }
                     }
                     Box(modifier = modifier
@@ -246,15 +254,53 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                             .wrapContentWidth(Alignment.Start)) {
                         FilledTonalButton(
                             modifier = modifier.fillMaxWidth(),
-                            colors = if(viewModel.uiState.collectAsState().value.targetReadId == null)
+                            colors = if(
+                                viewModel.uiState.collectAsState().value.dateType == "AES"
+                                && viewModel.uiState.collectAsState().value.targetReadId == null)
                                 ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
+                                setDataType(viewModel, "AES")
                                 setReadTargetId(viewModel, null)
                             }
                         ) {
-                            Text("[Read] Read to Any HyperRing TAG", textAlign = TextAlign.Center)
+                            Text("[Read-AES] Read to Any HyperRing TAG", textAlign = TextAlign.Center)
                         }
+                    }
+                }
+
+                Box(
+                    modifier = modifier
+                        .background(Color.LightGray)
+                        .height(10.dp)
+                        .fillMaxWidth())
+                if(!viewModel.uiState.collectAsState().value.isWriteMode) Row() {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentWidth(Alignment.Start)) {
+                        FilledTonalButton(
+                            modifier = modifier.fillMaxWidth(),
+                            colors = if(
+                                viewModel.uiState.collectAsState().value.dateType == "JWT"
+                                && viewModel.uiState.collectAsState().value.targetReadId == null)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                            else ButtonDefaults.outlinedButtonColors(),
+                            onClick = {
+                                setDataType(viewModel, "JWT")
+                                setReadTargetId(viewModel, null)
+                            }
+                        ) {
+                            Text("[Read-JWT] Read to Any HyperRing TAG", textAlign = TextAlign.Center)
+                        }
+                    }
+                    Box(modifier = modifier
+                        .background(Color.LightGray)
+                        .width(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .wrapContentWidth(Alignment.Start)) {
                     }
                 }
                 if(viewModel.uiState.collectAsState().value.isWriteMode) Row() {
@@ -264,20 +310,34 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                             .wrapContentWidth(Alignment.Start)) {
                         FilledTonalButton(
                             modifier = modifier.fillMaxWidth(),
-                            colors = if(viewModel.uiState.collectAsState().value.targetWriteId == 10L)
+                            colors = if (
+                                viewModel.uiState.collectAsState().value.dateType == "JWT")
                                 ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
-                                setWriteTargetId(viewModel, 10, 10)
-                            }) {
-                            Text("[Write] to ID-10 TAG", textAlign = TextAlign.Center)
+                                setDataType(viewModel,"JWT")
+                                setWriteTargetId(viewModel, null, 10)
+                            }
+                        ) {
+                            Text("[Write-JWT] to Any TAG(data id:10, data: John Doe)", textAlign = TextAlign.Center)
                         }
                     }
-
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .wrapContentWidth(Alignment.Start)) {
+                        FilledTonalButton(
+                            modifier = modifier.fillMaxWidth(),
+                            colors = if(viewModel.uiState.collectAsState().value.dateType == "AES"
+                                && viewModel.uiState.collectAsState().value.targetWriteId == 10L)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                            else ButtonDefaults.outlinedButtonColors(),
+                            onClick = {
+                                setDataType(viewModel,"AES")
+                                setWriteTargetId(viewModel, 10, 10)
+                            }) {
+                            Text("[Write-AES] to ID-10 TAG", textAlign = TextAlign.Center)
+                        }
                     }
                 }
                 if(viewModel.uiState.collectAsState().value.isWriteMode) Row() {
@@ -288,15 +348,18 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                     ) {
                         FilledTonalButton(
                             modifier = modifier.fillMaxWidth(),
-                            colors = if (viewModel.uiState.collectAsState().value.targetWriteId == null
+                            colors = if (
+                                viewModel.uiState.collectAsState().value.dateType == "AES"
+                                && viewModel.uiState.collectAsState().value.targetWriteId == null
                                 && viewModel.uiState.collectAsState().value.dataTagId == 10L)
                                 ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
+                                setDataType(viewModel,"AES")
                                 setWriteTargetId(viewModel, null, 10)
                             }
                         ) {
-                            Text("[Write] to Any TAG(data 10)", textAlign = TextAlign.Center)
+                            Text("[Write-AES] to Any TAG(data 10)", textAlign = TextAlign.Center)
                         }
                     }
                     Box(
@@ -306,15 +369,18 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                     ) {
                         FilledTonalButton(
                             modifier = modifier.fillMaxWidth(),
-                            colors = if (viewModel.uiState.collectAsState().value.targetWriteId == null
+                            colors = if (
+                                viewModel.uiState.collectAsState().value.dateType == "AES"
+                                && viewModel.uiState.collectAsState().value.targetWriteId == null
                                 && viewModel.uiState.collectAsState().value.dataTagId == 15L)
                                 ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
+                                setDataType(viewModel,"AES")
                                 setWriteTargetId(viewModel, null, 15)
                             }
                         ) {
-                            Text("[Write] to Any TAG(data 15)", textAlign = TextAlign.Center)
+                            Text("[Write-AES] to Any TAG(data 15)", textAlign = TextAlign.Center)
                         }
                     }
                 }
@@ -327,7 +393,10 @@ fun requestMFADialog(autoDismiss: Boolean=false) {
     if(MainActivity.mainActivity != null) {
         val mfaData: MutableList<HyperRingMFAChallengeInterface> = mutableListOf()
         // Custom Challenge
-        mfaData.add(DemoMFAChallengeData(10, "dIW6SbrLx+dfb2ckLIMwDOScxw/4RggwXMPnrFSZikA\u003d\n", null))
+        // AES Type
+        mfaData.add(AESMFAChallengeData(10, "dIW6SbrLx+dfb2ckLIMwDOScxw/4RggwXMPnrFSZikA\u003d\n", null))
+        // JWT Type
+        mfaData.add(JWTMFAChallengeData(15, "John Doe", null, MainActivity.jwtKey))
         HyperRingMFA.initializeHyperRingMFA(mfaData= mfaData.toList())
 
         fun onDiscovered(dialog: Dialog?, response: MFAChallengeResponse?) {
@@ -353,6 +422,10 @@ fun setReadTargetId(viewModel: MainViewModel, id: Long?) {
 
 fun setWriteTargetId(viewModel: MainViewModel, id: Long?, dataId: Long) {
     viewModel.setWriteTargetId(id, dataId)
+}
+
+fun setDataType(viewModel: MainViewModel, dataType: String) {
+    viewModel.setDataType(dataType)
 }
 
 fun toggleNFCMode(viewModel: MainViewModel) {
@@ -390,11 +463,14 @@ data class MainUiState(
     // UI state flags
     val nfcStatus: NFCStatus = NFCStatus.NFC_UNSUPPORTED,
     val isPolling: Boolean = false,
-    var isWriteMode : Boolean = false,
+    var isWriteMode: Boolean = false,
     var targetWriteId: Long? = null,
     var targetReadId: Long? = null,
-    var dataTagId: Long? = 10
-)
+    var dataTagId: Long? = 10,
+    val dateType: String = "AES"
+) {
+
+}
 
 class MainViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(MainUiState())
@@ -418,7 +494,10 @@ class MainViewModel : ViewModel() {
                 // Default HyperRingData
 //                HyperRingData.createData(10, mutableMapOf("age" to 25, "name" to "홍길동")))
                 // Demo custom Data
-                AESHRData.createData(uiState.value.dataTagId?:10, "Jenny Doe"))
+                if(_uiState.value.dateType == "AES") AESHRData.createData(uiState.value.dataTagId?:10, "Jenny Doe")
+                else JWTHRData.createData(10, "John Doe", MainActivity.jwtKey)
+            )
+
             if(isWrite && MainActivity.mainActivity != null)
                 showToast(MainActivity.mainActivity!!, "[write] Success [${uiState.value.dataTagId}]")
         } else {
@@ -427,8 +506,13 @@ class MainViewModel : ViewModel() {
                 val readTag: HyperRingTag? = HyperRingNFC.read(uiState.value.targetReadId, hyperRingTag)
                 if(readTag != null) {
                     if(MainActivity.mainActivity != null) showToast(MainActivity.mainActivity!!, "[read]${hyperRingTag.id}")
-                    val demoNFCData = AESHRData(readTag.id, readTag.data.data)
-                    Log.d("MainActivity", "[READ]1 : ${demoNFCData.data} / ${demoNFCData.decrypt(demoNFCData.data)}")
+                    if(_uiState.value.dateType == "AES") {
+                        val demoNFCData = AESHRData(readTag.id, readTag.data.data)
+                        Log.d("MainActivity", "[READ-AES] : ${demoNFCData.data} / ${demoNFCData.decrypt(demoNFCData.data)}")
+                    } else {
+                        val demoNFCData = JWTHRData(readTag.id, readTag.data.data, MainActivity.jwtKey)
+                        Log.d("MainActivity", "[READ-JWT]1 : ${demoNFCData.data} / ${demoNFCData.decrypt(demoNFCData.data)}")
+                    }
                 }
             }
         }
@@ -460,6 +544,14 @@ class MainViewModel : ViewModel() {
         _uiState.update { currentState ->
             currentState.copy(
                 isWriteMode = !_uiState.value.isWriteMode
+            )
+        }
+    }
+
+    fun setDataType(dataType: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                dateType = dataType
             )
         }
     }

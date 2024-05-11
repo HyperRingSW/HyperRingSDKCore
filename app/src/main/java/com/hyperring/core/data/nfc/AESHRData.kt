@@ -1,4 +1,4 @@
-package com.hyperring.core
+package com.hyperring.core.data.nfc
 import android.nfc.Tag
 import android.util.Base64
 import android.util.Log
