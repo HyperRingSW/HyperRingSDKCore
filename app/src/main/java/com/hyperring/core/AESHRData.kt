@@ -9,9 +9,10 @@ import javax.crypto.spec.SecretKeySpec
 
 /**
  * AES Encrypt Demo
+ * When implement encode/decode functions yourself
  *
  */
-class DemoNFCData(tag: Tag?) : HyperRingData(tag) {
+class AESHRData(tag: Tag?) : HyperRingData(tag) {
     override var id: Long? = null
     override var data: String? = ""
     constructor(id: Long?, data: String?) : this(null) {
@@ -54,8 +55,8 @@ class DemoNFCData(tag: Tag?) : HyperRingData(tag) {
         /**
          * Return {"id": id, "data": encryptedString("name": "John doe") }
          */
-        fun createData(id: Long, name: String): DemoNFCData {
-            val demoNFCData = DemoNFCData(id, "")
+        fun createData(id: Long, name: String): AESHRData {
+            val demoNFCData = AESHRData(id, "")
 //            var jsonData = "{\"id\":$id,\"data\":\"{\\\"name\\\":\\\"$name\\\"}\"}"
             demoNFCData.encrypt("{\\\"name\\\":\\\"$name\\\"}")
             return demoNFCData

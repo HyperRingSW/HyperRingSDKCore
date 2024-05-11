@@ -36,7 +36,7 @@ class DemoMFAChallengeData(tag: Tag?) : HyperRingMFAChallengeInterface {
 
     override fun decrypt(source: String?): String {
         if(source == null) {
-            throw DemoNFCData.DecryptFailure()
+            throw AESHRData.DecryptFailure()
         }
         var decodedByte: ByteArray = Base64.decode(source, Base64.DEFAULT)
         val iv = IvParameterSpec(DemoMFAChallengeData.DEMO_KEY.toByteArray())

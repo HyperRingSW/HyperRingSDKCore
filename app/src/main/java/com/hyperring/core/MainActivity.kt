@@ -418,7 +418,7 @@ class MainViewModel : ViewModel() {
                 // Default HyperRingData
 //                HyperRingData.createData(10, mutableMapOf("age" to 25, "name" to "홍길동")))
                 // Demo custom Data
-                DemoNFCData.createData(uiState.value.dataTagId?:10, "Jenny Doe"))
+                AESHRData.createData(uiState.value.dataTagId?:10, "Jenny Doe"))
             if(isWrite && MainActivity.mainActivity != null)
                 showToast(MainActivity.mainActivity!!, "[write] Success [${uiState.value.dataTagId}]")
         } else {
@@ -427,7 +427,7 @@ class MainViewModel : ViewModel() {
                 val readTag: HyperRingTag? = HyperRingNFC.read(uiState.value.targetReadId, hyperRingTag)
                 if(readTag != null) {
                     if(MainActivity.mainActivity != null) showToast(MainActivity.mainActivity!!, "[read]${hyperRingTag.id}")
-                    val demoNFCData = DemoNFCData(readTag.id, readTag.data.data)
+                    val demoNFCData = AESHRData(readTag.id, readTag.data.data)
                     Log.d("MainActivity", "[READ]1 : ${demoNFCData.data} / ${demoNFCData.decrypt(demoNFCData.data)}")
                 }
             }
