@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("JWT", "$jwtKey");
+        Log.d("JWT", "$jwtKey")
         mainActivity = this
         mainViewModel = ViewModelProvider(this)[MainViewModel::class.java]
         lifecycleScope.launch {
