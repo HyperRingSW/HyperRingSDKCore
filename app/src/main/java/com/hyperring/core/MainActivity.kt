@@ -455,7 +455,7 @@ fun checkAvailable(context: Context, viewModel: MainViewModel) {
 private fun showToast(context: Context, text: String) {
     Log.d("MainActivity", "text: $text")
     val handler = Handler(Looper.getMainLooper())
-    handler.postDelayed(Runnable {
+    handler.postDelayed({
         Toast.makeText(context, text, Toast.LENGTH_SHORT).show() }, 0)
 }
 
