@@ -257,7 +257,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                             colors = if(
                                 viewModel.uiState.collectAsState().value.dateType == "AES"
                                 && viewModel.uiState.collectAsState().value.targetReadId == null)
-                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Yellow)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Green)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
                                 setDataType(viewModel, "AES")
