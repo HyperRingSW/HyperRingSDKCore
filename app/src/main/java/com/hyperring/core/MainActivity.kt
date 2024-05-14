@@ -236,7 +236,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                             colors = if(
                                 viewModel.uiState.collectAsState().value.dateType == "AES"
                                 && viewModel.uiState.collectAsState().value.targetReadId == 10L)
-                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Green)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
                                 setDataType(viewModel, "AES")
@@ -257,7 +257,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                             colors = if(
                                 viewModel.uiState.collectAsState().value.dateType == "AES"
                                 && viewModel.uiState.collectAsState().value.targetReadId == null)
-                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Green)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
                                 setDataType(viewModel, "AES")
@@ -284,7 +284,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                             colors = if(
                                 viewModel.uiState.collectAsState().value.dateType == "JWT"
                                 && viewModel.uiState.collectAsState().value.targetReadId == null)
-                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Green)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
                                 setDataType(viewModel, "JWT")
@@ -312,7 +312,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                             modifier = modifier.fillMaxWidth(),
                             colors = if (
                                 viewModel.uiState.collectAsState().value.dateType == "JWT")
-                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Green)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
                                 setDataType(viewModel,"JWT")
@@ -330,7 +330,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                             modifier = modifier.fillMaxWidth(),
                             colors = if(viewModel.uiState.collectAsState().value.dateType == "AES"
                                 && viewModel.uiState.collectAsState().value.targetWriteId == 10L)
-                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Green)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
                                 setDataType(viewModel,"AES")
@@ -352,7 +352,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                                 viewModel.uiState.collectAsState().value.dateType == "AES"
                                 && viewModel.uiState.collectAsState().value.targetWriteId == null
                                 && viewModel.uiState.collectAsState().value.dataTagId == 10L)
-                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Green)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
                                 setDataType(viewModel,"AES")
@@ -373,7 +373,7 @@ fun NFCBox(context: Context, modifier: Modifier = Modifier, viewModel: MainViewM
                                 viewModel.uiState.collectAsState().value.dateType == "AES"
                                 && viewModel.uiState.collectAsState().value.targetWriteId == null
                                 && viewModel.uiState.collectAsState().value.dataTagId == 15L)
-                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Red)
+                                ButtonDefaults.filledTonalButtonColors(containerColor = Color.Green)
                             else ButtonDefaults.outlinedButtonColors(),
                             onClick = {
                                 setDataType(viewModel,"AES")
