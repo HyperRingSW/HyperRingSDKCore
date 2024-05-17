@@ -1,87 +1,134 @@
 # HyperRing Core Library
 
-## How to use
-### Add it in your root build.gradle at the end of repositories:
-`dependencyResolutionManagement {
+## Introduction
+The HyperRing Core Library provides a robust and flexible solution for integrating NFC and MFA capabilities into your applications. This guide will walk you through the steps to set up and use the HyperRing Core Library effectively.
+
+## Installation
+
+### Step 1: Configure your project
+Add the following lines to the `dependencyResolutionManagement` section of your root `build.gradle` file to include the necessary repositories:
+
+```groovy
+dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         mavenCentral()
         maven { url 'https://jitpack.io' }
     }
-}`
+}
+```
 
-### Add the dependency
-`dependencies {
+### Step 2: Add the library dependency
+Include the HyperRing Core Library in your module's `build.gradle` file:
+
+```groovy
+dependencies {
     implementation 'com.github.HyperRingSW:HyperRingSDKCore:TAG'
-}`
+}
+```
 
-## HyperRingNFC
-### Init
-`HyperRingNFC.initializeHyperRingNFC(context)`
+Replace `TAG` with the specific version tag you want to use.
 
-### Then if startPolling
-`HyperRingNFC.startNFCTagPolling(
+## Using HyperRingNFC
+
+### Initializing HyperRingNFC
+Before using any NFC-related functions, initialize the HyperRingNFC component:
+
+```kotlin
+HyperRingNFC.initializeHyperRingNFC(context)
+```
+
+### Starting NFC Tag Polling
+To begin scanning for NFC tags, call the `startNFCTagPolling` function. This function requires the current activity context and a callback for when a tag is discovered:
+
+```kotlin
+HyperRingNFC.startNFCTagPolling(
     context as Activity, 
-    onDiscovered = :: onDiscovered
-)`
+    onDiscovered = ::onDiscovered
+)
+```
 
-### stopPolling
-`HyperRingNFC.stopNFCTagPolling(context as Activity)`
+### Stopping NFC Tag Polling
+To stop scanning for NFC tags, use the `stopNFCTagPolling` function:
 
-### HyperRingTag
-#### onDiscovered return HyperRingTag Tag data
+```kotlin
+HyperRingNFC.stopNFCTagPolling(context as Activity)
+```
 
-### onDiscovered get Tagged data
-`private fun onDiscovered(hyperRingTag: HyperRingTag) : HyperRingTag`
-#### You can use HyperRingNFC.write, HyperRingNFC.read Functions in onDiscovered
+### Handling Discovered Tags
+The `onDiscovered` callback provides the `HyperRingTag` data when an NFC tag is found. This is where you can implement your logic for reading or writing to the tag:
 
-### When using HyperRingNFC read, write functions.  HyperRingData is used.
-#### (override encrypt, decrypt functions)
+```kotlin
+private fun onDiscovered(hyperRingTag: HyperRingTag): HyperRingTag {
+    // Your code to handle the discovered tag
+}
+```
 
-### Writing Example Code1 - AESHRData is Example HyperRingData with AES algo.
-#### AESHRData inheritance HyperRingData
-`HyperRingNFC.write(
+### Reading and Writing Data
+Use the `HyperRingNFC.write` and `HyperRingNFC.read` functions within the `onDiscovered` callback. The `HyperRingData` class is used for data encryption and decryption.
+
+#### Writing Example 1: AES Encryption
+The following example shows how to write data to an NFC tag using AES encryption:
+
+```kotlin
+HyperRingNFC.write(
     uiState.value.targetWriteId, 
     hyperRingTag, 
-    **AESHRData**.createData(uiState.value.dataTagId?:10, "Jenny Doe")`
+    AESHRData.createData(uiState.value.dataTagId ?: 10, "Jenny Doe")
+)
+```
 
-### Writing Example Code2 - JWTHRData is Example HyperRingData with JWT.
-#### JWTHRData inheritance HyperRingData
-`HyperRingNFC.write(
+#### Writing Example 2: JWT Encryption
+The following example shows how to write data to an NFC tag using JWT:
+
+```kotlin
+HyperRingNFC.write(
     uiState.value.targetWriteId, 
     hyperRingTag, 
-    **JWTHRData**.createData(10, "John Doe", MainActivity.jwtKey)
-)`
+    JWTHRData.createData(10, "John Doe", MainActivity.jwtKey)
+)
+```
 
-### Reading Example
-`val readTag: HyperRingTag? = HyperRingNFC.read(uiState.value.targetReadId, hyperRingTag)`
+#### Reading Example
+To read data from an NFC tag, use the following code:
 
-## HyperRingMFA
+```kotlin
+val readTag: HyperRingTag? = HyperRingNFC.read(uiState.value.targetReadId, hyperRingTag)
+```
 
-### Init
-#### mfaData is for MFA data 
-#### mfaData parameter should not be empty
-`HyperRingMFA.initializeHyperRingMFA(mfaData= mfaData.toList())`
+## Using HyperRingMFA
 
-### Init Example Code
-`val mfaData: MutableList<HyperRingMFAChallengeInterface> = mutableListOf()
+### Initializing HyperRingMFA
+Initialize the HyperRingMFA component with your MFA data. Ensure the `mfaData` parameter is not empty:
+
+```kotlin
+val mfaData: MutableList<HyperRingMFAChallengeInterface> = mutableListOf()
 // AES Type
-mfaData.add(**AESMFAChallengeData**(10, "dIW6SbrLx+dfb2ckLIMwDOScxw/4RggwXMPnrFSZikA\u003d\n", null))
+mfaData.add(AESMFAChallengeData(10, "dIW6SbrLx+dfb2ckLIMwDOScxw/4RggwXMPnrFSZikA=", null))
 // JWT Type
-mfaData.add(**JWTMFAChallengeData**(15, "John Doe", null, MainActivity.jwtKey))
-HyperRingMFA.initializeHyperRingMFA(mfaData= mfaData.toList())`
-#### AESMFAChallengeData, JWTMFAChallengeData is CustomMFAChallengeData
-#### It is based on HyperRingMFAChallengeInterface
-#### (override encrypt, decrypt, challenge functions)
+mfaData.add(JWTMFAChallengeData(15, "John Doe", null, MainActivity.jwtKey))
 
-### requestHyperRingMFAAuthentication
-`HyperRingMFA.requestHyperRingMFAAuthentication(
-activity = MainActivity.mainActivity!!,
-onNFCDiscovered = ::onDiscovered,
-autoDismiss = autoDismiss)`
-#### onNFCDiscovered get Tagged data from Base HyperRing Polling UI
-`fun onDiscovered(dialog: Dialog?, response: MFAChallengeResponse?) {
+HyperRingMFA.initializeHyperRingMFA(mfaData = mfaData.toList())
+```
+
+### Requesting MFA Authentication
+To initiate MFA authentication, use the `requestHyperRingMFAAuthentication` function. This function requires the current activity context, a callback for when an NFC tag is discovered, and an option to auto-dismiss the dialog:
+
+```kotlin
+HyperRingMFA.requestHyperRingMFAAuthentication(
+    activity = MainActivity.mainActivity!!,
+    onNFCDiscovered = ::onDiscovered,
+    autoDismiss = autoDismiss
+)
+```
+
+### Handling MFA Authentication Response
+The `onDiscovered` callback will receive the MFA challenge response. Use this response to verify the MFA authentication:
+
+```kotlin
+fun onDiscovered(dialog: Dialog?, response: MFAChallengeResponse?) {
     HyperRingMFA.verifyHyperRingMFAAuthentication(response)
-}`
-### requestHyperRingMFAAuthentication
-#### Verify response from onDiscovered
+}
+```
+
+This guide provides a detailed overview of how to set up and use the HyperRing Core Library in your applications. For more advanced usage and examples, please refer to the official documentation.
