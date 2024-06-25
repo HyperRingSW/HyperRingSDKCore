@@ -1,3 +1,4 @@
+
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -7,42 +8,42 @@ plugins {
 version = "1.1.0"
 group = "com.github.HyperRingSW"
 
-publishing {
-    publications {
-        create<MavenPublication>("library") {
-//            from(components["java"])
-            groupId = "com.github.HyperRingSW"
-            artifactId = "HyperRingCore"
-            version = "1.1.0"
-            pom {
-                name = "HyperRingCore Library"
-                description = "HyperRing NFC Device core sdk library"
-                url = "https://github.com/HyperRingSW/HyperRingSDKCore"
-                licenses {
-                    license {
-                        name = "The Apache License, Version 2.0"
-                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-                    }
-                }
-            }
-            afterEvaluate {
-                from(components["release"])
-            }
-        }
-    }
-    repositories {
-        maven {
-            url = uri(layout.buildDirectory.dir("publishing-repository"))
-        }
-    }
-}
+//publishing {
+//    publications {
+//        create<MavenPublication>("library") {
+////            from(components["java"])
+//            groupId = "com.github.HyperRingSW"
+//            artifactId = "HyperRingCore"
+//            version = "1.1.0"
+//            pom {
+//                name = "HyperRingCore Library"
+//                description = "HyperRing NFC Device core sdk library"
+//                url = "https://github.com/HyperRingSW/HyperRingSDKCore"
+//                licenses {
+//                    license {
+//                        name = "The Apache License, Version 2.0"
+//                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+//                    }
+//                }
+//            }
+//            afterEvaluate {
+//                from(components["release"])
+//            }
+//        }
+//    }
+//    repositories {
+//        maven {
+//            url = uri(layout.buildDirectory.dir("publishing-repository"))
+//        }
+//    }
+//}
 
 android {
     namespace = "com.hyperring.sdk.core"
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 28
+        minSdk = 24
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
