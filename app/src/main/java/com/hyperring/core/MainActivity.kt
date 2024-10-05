@@ -468,7 +468,8 @@ class MainViewModel : ViewModel() {
                 // Demo custom Data
                 if(_uiState.value.dateType == "AES") AESWalletHRData.createData(uiState.value.dataTagId?:10, _uiState.value.nfcTagId)
 //                if(_uiState.value.dateType == "AES") AESWalletHRData.createData(uiState.value.dataTagId?:10, " 0x81Ff4cac5Ad0e8E4b7D4D05bc22B4DdcB87599A3")
-                else JWTHRData.createData(10, "John Doe", MainActivity.jwtKey)
+                else JWTHRData.createData(10,
+                    "John Doe", MainActivity.jwtKey)
             )
 
             if(isWrite && MainActivity.mainActivity != null)
