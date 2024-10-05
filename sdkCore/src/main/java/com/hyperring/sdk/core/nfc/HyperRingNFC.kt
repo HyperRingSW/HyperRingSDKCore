@@ -1,6 +1,8 @@
 package com.hyperring.sdk.core.nfc
 import android.app.Activity
 import android.content.Context
+import android.nfc.NdefMessage
+import android.nfc.NdefRecord
 import android.nfc.NfcAdapter
 import android.util.Log
 import com.hyperring.sdk.core.data.HyperRingDataNFCInterface
@@ -109,9 +111,11 @@ class HyperRingNFC {
                     }
                     try {
                         ndef.connect()
-                        ndef.writeNdefMessage(hyperRingData.ndefMessageBody())
-                        logD("[Write] success. [${hyperRingData.ndefMessageBody().records.get(0).tnf}] [${hyperRingData.ndefMessageBody().records.get(0).payload}]")
-                    } catch (e: Exception) {
+                        var packageRecord = NdefRecord.createApplicationRecord("com.hyperring.authenticator.hyperring_authenticator")
+                        var records = arrayOf(packageRecord) + hyperRingData.ndefMessageBody().records
+                        ndef.writeNdefMessage( NdefMessage(records))
+                        logD("[Write] success. [${hyperRingData.ndefMessageBody().records.get(0).tnf}] [${hyperRingData.ndefMessageBody().records.get(0).payload}]")}
+                    catch (e: Exception) {
                         logE("[Write] exception: ${e}")
                     } finally {
                         ndef.close()
