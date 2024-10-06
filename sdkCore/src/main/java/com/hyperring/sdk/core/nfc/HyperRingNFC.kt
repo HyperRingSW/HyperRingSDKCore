@@ -128,6 +128,35 @@ class HyperRingNFC {
             return false
         }
 
+        fun writeForPass(hyperRingTag: HyperRingTag, hyperRingData: HyperRingData): Boolean {
+            if(hyperRingTag.isHyperRingTag()) {
+                val ndef = hyperRingTag.getNDEF()
+                if (ndef != null) {
+                    if(!ndef.isWritable) {
+                        throw ReadOnlyNFCException()
+                    }
+                    if(ndef.maxSize <= hyperRingData.ndefMessageBody().toByteArray().size) {
+                        throw OverMaxSizeMsgException(ndef.maxSize, hyperRingData.ndefMessageBody().toByteArray().size)
+                    }
+                    try {
+                        ndef.connect()
+                        var packageRecord = NdefRecord.createApplicationRecord("com.hyperring.authenticator.hyperring_authenticator")
+                        var records = arrayOf(packageRecord) + hyperRingData.ndefMessageBody().records
+                        ndef.writeNdefMessage( NdefMessage(records))
+                        logD("[Write] success. [${hyperRingData.ndefMessageBody().records.get(0).tnf}] [${hyperRingData.ndefMessageBody().records.get(0).payload}]")}
+                    catch (e: Exception) {
+                        logE("[Write] exception: ${e}")
+                    } finally {
+                        ndef.close()
+                    }
+                    return true
+                } else {
+                    logD("ndef is null")
+                }
+            }
+            return false
+        }
+
         /***
          * If HyperRingTagId is same HyperRingData`s inner hyperRingTagId return Data
          *
