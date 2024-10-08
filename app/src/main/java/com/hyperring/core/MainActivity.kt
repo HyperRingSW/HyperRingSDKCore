@@ -460,6 +460,7 @@ class MainViewModel : ViewModel() {
     }
 
     private fun onDiscovered(hyperRingTag: HyperRingTag) : HyperRingTag {
+//        showToast(MainActivity.mainActivity!!, "[temp] MaxSize: [${hyperRingTag.getNDEF()?.maxSize}]")
         if(_uiState.value.isWriteMode) {
             /// Writing Data to Any HyperRing NFC TAG
             val isWrite = HyperRingNFC.write(uiState.value.targetWriteId, hyperRingTag,

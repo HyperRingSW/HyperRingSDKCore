@@ -16,7 +16,7 @@ import android.util.Log
  * @param tag NFC Tag
  * @param hyperRingTagId hyperRing`s Tag ID - if null, not initialized NFC Card
  */
-open class HyperRingTag(private var tag: Tag) {
+open class HyperRingTag(var tag: Tag) {
     var data: HyperRingData = HyperRingData(tag)
     val id: Long?
         get() {

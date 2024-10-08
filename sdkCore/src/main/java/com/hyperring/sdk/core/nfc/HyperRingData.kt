@@ -131,7 +131,7 @@ open class HyperRingData(tag: Tag?, override var id: Long? = null, override var 
     }
 
     companion object {
-        private val gson: Gson = Gson()
+        val gson: Gson = Gson()
 
         private fun jsonStringFromMap(map: Map<String, Any>): String {
             return gson.toJson(map)

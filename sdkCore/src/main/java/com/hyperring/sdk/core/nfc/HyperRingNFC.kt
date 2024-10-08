@@ -5,6 +5,7 @@ import android.nfc.NdefMessage
 import android.nfc.NdefRecord
 import android.nfc.NfcAdapter
 import android.util.Log
+import android.widget.Toast
 import com.hyperring.sdk.core.data.HyperRingDataNFCInterface
 
 class HyperRingNFC {
@@ -128,7 +129,7 @@ class HyperRingNFC {
             return false
         }
 
-        fun writeForPass(hyperRingTag: HyperRingTag, hyperRingData: HyperRingData): Boolean {
+        fun writeForPass(hyperRingTagId: Long, hyperRingTag: HyperRingTag, hyperRingData: HyperRingData): Boolean {
             if(hyperRingTag.isHyperRingTag()) {
                 val ndef = hyperRingTag.getNDEF()
                 if (ndef != null) {
@@ -141,8 +142,14 @@ class HyperRingNFC {
                     try {
                         ndef.connect()
                         var packageRecord = NdefRecord.createApplicationRecord("com.hyperring.authenticator.hyperring_authenticator")
-                        var records = arrayOf(packageRecord) + hyperRingData.ndefMessageBody().records
-                        ndef.writeNdefMessage( NdefMessage(records))
+                        var passRecord = NdefRecord(
+                            NdefRecord.TNF_UNKNOWN,
+                            null,
+                            longToByteArray(hyperRingTagId),
+                            HyperRingData.gson.toJson(mapOf("id" to hyperRingTagId)).toByteArray(Charsets.UTF_8)
+                        )
+                        var records = arrayOf(packageRecord, passRecord)
+                        ndef.writeNdefMessage(NdefMessage(records))
                         logD("[Write] success. [${hyperRingData.ndefMessageBody().records.get(0).tnf}] [${hyperRingData.ndefMessageBody().records.get(0).payload}]")}
                     catch (e: Exception) {
                         logE("[Write] exception: ${e}")
@@ -155,6 +162,12 @@ class HyperRingNFC {
                 }
             }
             return false
+        }
+
+        fun longToByteArray(value: Long): ByteArray {
+            return ByteArray(8) { i ->
+                (value shr (7 - i) * 8).toByte()
+            }
         }
 
         /***
