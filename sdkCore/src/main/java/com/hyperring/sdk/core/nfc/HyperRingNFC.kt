@@ -4,12 +4,12 @@ import android.content.Context
 import android.nfc.NdefMessage
 import android.nfc.NdefRecord
 import android.nfc.NfcAdapter
+import android.nfc.Tag
 import android.util.Log
-import android.widget.Toast
-import com.hyperring.sdk.core.data.HyperRingDataNFCInterface
 
 class HyperRingNFC {
     companion object {
+        private var lastTag: Tag? = null
         private var initialized = false
         private var adapter: NfcAdapter? = null
         var isPolling: Boolean = false // Polling status
@@ -65,10 +65,17 @@ class HyperRingNFC {
         fun startNFCTagPolling(activity: Activity, onDiscovered: (HyperRingTag) -> Map<String, Any> ) {
             if(getNFCStatus() == NFCStatus.NFC_ENABLED) {
                 logD( "Start NFC Polling.")
-                adapter?.enableReaderMode(activity, {
-                    val scannedHyperRingTag = HyperRingTag(it)
+
+                adapter?.enableReaderMode(activity, { tag ->
+                    val scannedHyperRingTag = HyperRingTag(tag)
+                    lastTag = tag
+                    Log.d("writeForPass","[A] save last tag")
                     onDiscovered(scannedHyperRingTag)
                 }, HyperRingTag.flags, null)
+//                adapter?.enableReaderMode(activity, {
+//                    val scannedHyperRingTag = HyperRingTag(it)
+//                    onDiscovered(scannedHyperRingTag)
+//                }, HyperRingTag.flags, null)
             }
         }
 
@@ -129,16 +136,23 @@ class HyperRingNFC {
             return false
         }
 
-        fun writeForPass(hyperRingTagId: Long, hyperRingTag: HyperRingTag, hyperRingData: HyperRingData): Boolean {
-            if(hyperRingTag.isHyperRingTag()) {
-                val ndef = hyperRingTag.getNDEF()
+        fun writeForPass(hyperRingTagId: Long): Boolean {
+            Log.d("writeForPass","[A]writeForPass: start")
+            if(lastTag == null) {
+                Log.d("writeForPass","[A]writeForPass: lastTag is null")
+                return false
+            }
+            try {
+                val tag: Tag = lastTag!!
+                val ndef = HyperRingTag.getNDEF(tag)
                 if (ndef != null) {
+                    Log.d("writeForPass","[A]writeForPass: ndef Exist")
                     if(!ndef.isWritable) {
                         throw ReadOnlyNFCException()
                     }
-                    if(ndef.maxSize <= hyperRingData.ndefMessageBody().toByteArray().size) {
-                        throw OverMaxSizeMsgException(ndef.maxSize, hyperRingData.ndefMessageBody().toByteArray().size)
-                    }
+//                    if(ndef.maxSize <= hyperRingData.ndefMessageBody().toByteArray().size) {
+//                        throw OverMaxSizeMsgException(ndef.maxSize, hyperRingData.ndefMessageBody().toByteArray().size)
+//                    }
                     try {
                         ndef.connect()
                         var packageRecord = NdefRecord.createApplicationRecord("com.hyperring.authenticator.hyperring_authenticator")
@@ -150,16 +164,20 @@ class HyperRingNFC {
                         )
                         var records = arrayOf(packageRecord, passRecord)
                         ndef.writeNdefMessage(NdefMessage(records))
-                        logD("[Write] success. [${hyperRingData.ndefMessageBody().records.get(0).tnf}] [${hyperRingData.ndefMessageBody().records.get(0).payload}]")}
+                        logD("[Write] success. ")}
                     catch (e: Exception) {
+                        Log.d("writeForPass","[A]writeForPass: e: ${e.toString()}")
                         logE("[Write] exception: ${e}")
                     } finally {
                         ndef.close()
                     }
                     return true
                 } else {
+                    Log.d("writeForPass","[A]writeForPass: ndef is null}")
                     logD("ndef is null")
                 }
+            }catch (e: Exception) {
+                Log.d("writeForPass","[A]writeForPass: e: ${e.toString()}")
             }
             return false
         }
@@ -177,6 +195,8 @@ class HyperRingNFC {
          * @param hyperRingTag
          */
         fun read(hyperRingTagId: Long?, hyperRingTag: HyperRingTag): HyperRingTag? {
+            lastTag = hyperRingTag.tag
+            Log.d("writeForPass","[A]writeForPass: read lastTag")
             if(hyperRingTagId == null) {
                 return hyperRingTag
             } else if(hyperRingTag.id == hyperRingTagId) {
