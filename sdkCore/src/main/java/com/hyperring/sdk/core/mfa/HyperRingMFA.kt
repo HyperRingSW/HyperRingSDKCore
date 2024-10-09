@@ -140,7 +140,7 @@ class HyperRingMFA {
 
             var dialog: Dialog? = null
 
-            fun onDiscovered(tag: HyperRingTag): HyperRingTag {
+            fun onDiscovered(tag: HyperRingTag): Map<String, Any> {
                 mfaChallengeResponse = processMFAChallenge(tag.data)
                 eventListener(dialog, mfaChallengeResponse)
                 val image: ImageView? = dialog?.findViewById(R.id.image)
@@ -166,7 +166,7 @@ class HyperRingMFA {
                     }
 
                 }
-                return tag
+                return tag.toMap()
             }
 
             CoroutineScope(Dispatchers.Main).launch {

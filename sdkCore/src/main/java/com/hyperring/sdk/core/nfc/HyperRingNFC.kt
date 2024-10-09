@@ -62,7 +62,7 @@ class HyperRingNFC {
          * @param activity NFC adapter need Android Activity
          * @param onDiscovered When NFC tagged. return tag data
          */
-        fun startNFCTagPolling(activity: Activity, onDiscovered: (HyperRingTag) -> HyperRingTag ) {
+        fun startNFCTagPolling(activity: Activity, onDiscovered: (HyperRingTag) -> Map<String, Any> ) {
             if(getNFCStatus() == NFCStatus.NFC_ENABLED) {
                 logD( "Start NFC Polling.")
                 adapter?.enableReaderMode(activity, {

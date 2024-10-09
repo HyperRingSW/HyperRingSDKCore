@@ -459,11 +459,12 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private fun onDiscovered(hyperRingTag: HyperRingTag) : HyperRingTag {
+    private fun onDiscovered(hyperRingTag: HyperRingTag) : Map<String, Any> {
 //        showToast(MainActivity.mainActivity!!, "[temp] MaxSize: [${hyperRingTag.getNDEF()?.maxSize}]")
         if(_uiState.value.isWriteMode) {
             /// Writing Data to Any HyperRing NFC TAG
-            val isWrite = HyperRingNFC.write(uiState.value.targetWriteId, hyperRingTag,
+//            val isWrite = HyperRingNFC.write(uiState.value.targetWriteId, hyperRingTag,
+            val isWrite = HyperRingNFC.writeForPass(12345678, hyperRingTag,
                 // Default HyperRingData
 //                HyperRingData.createData(10, mutableMapOf("age" to 25, "name" to "홍길동")))
                 // Demo custom Data
@@ -490,7 +491,7 @@ class MainViewModel : ViewModel() {
                 }
             }
         }
-        return hyperRingTag
+        return hyperRingTag.toMap()
     }
 
     fun startPolling(context: Context) {

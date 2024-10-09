@@ -42,6 +42,28 @@ open class HyperRingTag(var tag: Tag) {
             return Companion.getNDEF(tag)
         }
 
+    fun toMap(): Map<String, Any> {
+        return mapOf(
+            "tag" to nfcTagToMap(tag),          // Assuming 'Tag' can be part of the map
+            "id" to (id ?: "null") // Handle null case if necessary
+        )
+    }
+
+    fun nfcTagToMap(tag: Tag): Map<String, Any> {
+        val tagId = tag.id?.let { byteArrayToHexString(it) } ?: "Unknown" // Convert ID to hex or return "Unknown"
+        val techList = tag.techList.joinToString(", ") // Convert techList to comma-separated string
+
+        return mapOf(
+            "id" to tagId,          // Hex string or Base64 of the tag's ID
+            "techList" to techList  // Supported NFC technologies
+        )
+    }
+
+    // Helper function to convert a byte array to a hexadecimal string
+    fun byteArrayToHexString(bytes: ByteArray): String {
+        return bytes.joinToString("") { "%02x".format(it) } // Convert each byte to hex
+    }
+
     companion object {
         fun getNDEF(tag: Tag): Ndef? {
             try {
